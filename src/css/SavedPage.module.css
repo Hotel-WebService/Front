@@ -65,6 +65,11 @@
     border-bottom: 1px solid #ccc;
 }
 
+.imageGroup {
+    width: 400px;
+    height: 240px;
+}
+
 /* 카드 */
 .card {
   flex: 1;
@@ -75,6 +80,12 @@
   overflow: hidden;
 }
 
+
+.cardSlider {
+    width: 100%;
+    height: 100%;
+}
+
 .cardWrapper {
   display: flex;
   align-items: flex-start;
@@ -82,12 +93,10 @@
   margin-bottom: 1rem;
 }
 
-
 .cardImg {
-    width: 400px;
-    height: 260px;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    flex-shrink: 0;
 }
 
 .cardInfo {

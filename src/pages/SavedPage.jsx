@@ -4,6 +4,19 @@ import styles from '../css/SavedPage.module.css';
 import instargram from '../assets/instargram.jpg';
 import facebook from '../assets/facebook.jpg';
 import twitter from '../assets/twitter.jpg';
+import grand1 from '../assets/grand1.jpg';
+import grand2 from '../assets/grand2.jpg';
+import grand3 from '../assets/grand3.jpg';
+import paradise1 from '../assets/paradise1.jpg';
+import paradise2 from '../assets/paradise2.jpg';
+import paradise3 from '../assets/paradise3.jpg';
+import signiel1 from '../assets/signiel1.jpg';
+import signiel2 from '../assets/signiel2.jpg';
+import signiel3 from '../assets/signiel3.jpg';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import { Navigation } from 'swiper/modules';
 
 const SavedPage = () => {
     const [savedItems, setSavedItems] = useState([
@@ -17,6 +30,11 @@ const SavedPage = () => {
             total: '₩875,000',
             liked: true,
             selected: false,
+            images: [
+                paradise1,
+                paradise2,
+                paradise3,
+            ]
         },
         {
             id: 2,
@@ -28,6 +46,11 @@ const SavedPage = () => {
             total: '₩1,050,000',
             liked: true,
             selected: false,
+            images: [
+                signiel1,
+                signiel2,
+                signiel3,
+            ]
         },
         {
             id: 3,
@@ -39,6 +62,11 @@ const SavedPage = () => {
             total: '₩920,000',
             liked: true,
             selected: false,
+            images: [
+                grand1,
+                grand2,
+                grand3,
+            ]
         },
     ]);
 
@@ -63,9 +91,9 @@ const SavedPage = () => {
     };
 
     const deleteAll = () => {
-    setSavedItems([]);  // 저장된 모든 아이템 제거
-};
-    
+        setSavedItems([]);  // 저장된 모든 아이템 제거
+    };
+
     return (
         <div className={styles.body}>
             {/* Header */}
@@ -103,11 +131,26 @@ const SavedPage = () => {
                             onChange={() => toggleSelect(item.id)}
                         />
                         <div className={styles.card}>
-                            <img
-                                className={styles.cardImg}
-                                src="https://via.placeholder.com/260x150"
-                                alt="호텔 이미지"
-                            />
+                            <div className={styles.imageGroup}>
+                                <Swiper
+                                    modules={[Navigation]}
+                                    navigation
+                                    spaceBetween={10}
+                                    slidesPerView={1}
+                                    className={styles.cardSlider}
+                                >
+                                    {item.images.map((imgSrc, index) => (
+                                        <SwiperSlide key={index}>
+                                            <img
+                                                className={styles.cardImg}
+                                                src={imgSrc}
+                                                alt={`호텔 이미지 ${index + 1}`}
+                                            />
+                                        </SwiperSlide>
+                                    ))}
+                                </Swiper>
+
+                            </div>
                             <div className={styles.cardInfo}>
                                 <div className={styles.cardTop}>
                                     <h3 className={styles.hotelName}>{item.hotel}</h3>
@@ -139,6 +182,8 @@ const SavedPage = () => {
                         </div>
                     </div>
                 ))}
+
+                <div className={styles.divider}></div>
 
                 <div className={styles.actions}>
                     <button onClick={deleteSelected}>선택 삭제</button>

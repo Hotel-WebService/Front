@@ -60,6 +60,14 @@ const FirstPage = () => {
       });
   }, []);
 
+  useEffect(() => {
+    // 실행 하고 끝 1회성.
+  }, []);
+
+  useEffect(() => {
+    console.log(location);
+  }, [location]);
+
   // ③ 카카오맵 SDK 로드 & 지도 초기화
   useEffect(() => {
     // 이미 kakao.maps 가 로드되어 있으면 바로 초기화
@@ -129,7 +137,8 @@ const FirstPage = () => {
                 ? (
                   <>
                     <span>안녕하세요, {username}님        </span>
-                    <Link to="/myPage">     MyPage</Link>
+                    <Link to="/myPage">MyPage</Link>
+                    <Link to="/savedPage">찜 목록</Link>
                     <Link to="/"
                       onClick={handleLogout}
                       className={styles.logoutLink}
@@ -166,7 +175,7 @@ const FirstPage = () => {
                 selected={checkin}
                 onChange={(date) => setCheckin(date)}
                 placeholderText="날짜 선택"
-                dateFormat="yyyy/MM/dd"   // ✅ 월 표시 강제 지정 (선택)
+                dateFormat="yyyy/MM/dd" 
                 popperPlacement="bottom-start"
                 showPopperArrow={false}
                 locale={ko}
@@ -178,7 +187,7 @@ const FirstPage = () => {
                 selected={checkout}
                 onChange={(date) => setCheckout(date)}
                 placeholderText="날짜 선택"
-                dateFormat="yyyy/MM/dd"   // ✅ 월 표시 강제 지정 (선택)
+                dateFormat="yyyy/MM/dd" 
                 popperPlacement="bottom-start"
                 showPopperArrow={false}
                 locale={ko}
@@ -233,8 +242,8 @@ const FirstPage = () => {
           }}
           loop={true}
           autoplay={{
-            delay: 5000,      // 5초마다 자동 전환
-            disableOnInteraction: false  // 유저가 클릭해도 자동재생 유지
+            delay: 5000,    
+            disableOnInteraction: false 
           }}
           slidesPerView={1}
         >

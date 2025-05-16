@@ -4,7 +4,7 @@
   color: inherit;
 }
 
-/* Footer */
+/* Header */
 .header {
     display: flex;
     justify-content: space-between;
@@ -39,8 +39,9 @@
     color: #333;
     font-size: 15px;
 }
-/* Footer */
+/* Header */
 
+/*DatePicker*/
 .custom-prev {
   position: absolute;
   top: 50%;
@@ -71,6 +72,8 @@ body .react-datepicker__day-name {
 body .react-datepicker__navigation-icon::before {
   border-color: #ffffff;
 }
+
+/*DatePicker*/
 
 /* Footer */
 footer {
@@ -153,3 +156,33 @@ footer {
   background-repeat: no-repeat;
 }
 /* Footer */
+
+/* Swiper 버튼 커스터마이징 */
+.swiper-button-prev,
+.swiper-button-next {
+    position: absolute;
+    top: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    z-index: 10;
+}
+
+.swiper-button-prev::after,
+.swiper-button-next::after {
+    font-size: 24px;
+    font-weight: bold;
+    color: #000000;
+}
+
+.swiper-button-prev {
+    left: 10px;
+}
+
+.swiper-button-next {
+    right: 10px;
+}
+/* Swiper 버튼 커스터마이징 */
