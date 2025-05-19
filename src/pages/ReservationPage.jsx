@@ -13,6 +13,9 @@ import paradise2 from '../assets/paradise2.jpg';
 import paradise3 from '../assets/paradise3.jpg';
 import paradise4 from '../assets/paradise4.jpg';
 import paradise5 from '../assets/paradise5.jpg';
+import paradiseRoom1 from '../assets/paradiseRoom1.jpg';
+import paradiseRoom2 from '../assets/paradiseRoom2.jpg';
+import paradiseRoom3 from '../assets/paradiseRoom3.jpg';
 
 
 const ReservationPage = () => {
@@ -69,22 +72,22 @@ const ReservationPage = () => {
             id: 1,
             name: "디럭스룸, 부분 바다 전망 (Annex Building)",
             specs: ["3명", "더블침대 1개", "2인 수용장 무료 이용(1일 기준)", "스파 이용"],
-            price: 525000,
-            image: paradise2,
+            price: 364000,
+            image: paradiseRoom1,
         },
         {
             id: 2,
             name: "디럭스 더블룸, 바다 전망 (Main Building)",
             specs: ["3명", "더블침대 1개", "2인 수영장 무료 이용(1일 기준)", "스파 이용", "바다 전망"],
-            price: 575000,
-            image: paradise3,
+            price: 382000,
+            image: paradiseRoom2,
         },
         {
             id: 3,
             name: "이그제큐티브 더블룸, 시내 전망 (Main Building)",
             specs: ["2인", "더블침대 1개", "2인 유럽식 아침 식사", "2인 수영장 무료 이용(1일 기준)", "시내 전망"],
-            price: 495000,
-            image: paradise4,
+            price: 436800,
+            image: paradiseRoom3,
         },
     ];
 
