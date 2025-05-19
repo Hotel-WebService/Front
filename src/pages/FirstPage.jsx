@@ -29,6 +29,7 @@ const FirstPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
   const navigate = useNavigate(); // 백엔드 추가
+  const [hotel, setHotel] = useState(null); // 백엔드 호텔 정보 추가
 
   // 예약 관련 상태
   const [location, setLocation] = useState('');
@@ -60,45 +61,58 @@ const FirstPage = () => {
       });
   }, []);
 
+// --- 2) 카카오 스크립트 한 번만 로드 ---
   useEffect(() => {
-    // 실행 하고 끝 1회성.
-  }, []);
-
-  useEffect(() => {
-    console.log(location);
-  }, [location]);
-
-  // ③ 카카오맵 SDK 로드 & 지도 초기화
-  useEffect(() => {
-    // 이미 kakao.maps 가 로드되어 있으면 바로 초기화
-    if (window.kakao && window.kakao.maps) {
-      window.kakao.maps.load(initMap);
-      return;
-    }
-
+    if (window.kakao && window.kakao.maps) return;
     const script = document.createElement('script');
-    script.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=d14da4067c563de35ba14987b99bdb89&autoload=false';
+    script.src =
+      'https://dapi.kakao.com/v2/maps/sdk.js?appkey=d14da4067c563de35ba14987b99bdb89&autoload=false';
     script.async = true;
     document.head.appendChild(script);
-
+    // SDK 로드완료 시점에 초기화 콜백 등록
     script.onload = () => {
-      window.kakao.maps.load(initMap);
+      window.kakao.maps.load(() => {
+        // 호텔 데이터가 이미 있으면 즉시 그려주고
+        if (hotel) drawMap(hotel);
+      });
     };
-
-    function initMap() {
-      if (!mapRef.current) return;
-      const options = {
-        center: new window.kakao.maps.LatLng(37.5665, 126.9780), // 서울시청
-        level: 4
-      };
-      new window.kakao.maps.Map(mapRef.current, options);
-    }
-
-    // cleanup
     return () => {
       document.head.removeChild(script);
     };
+  }, [hotel]);  // hotel 바뀔 때도 재실행
+
+  // --- 3) 호텔 정보 fetch ---
+  useEffect(() => {
+    const hotelId = 1;  // 예시
+    fetch(`http://localhost:8080/api/hotels/${hotelId}`, { credentials: 'include' })
+      .then(res => {
+        if (!res.ok) throw new Error('호텔을 못 찾음');
+        return res.json();
+      })
+      .then(data => setHotel(data))
+      .catch(console.error);
   }, []);
+
+  // --- 4) hotel 상태 변경 시 지도 그리기 ---
+  useEffect(() => {
+    if (hotel && window.kakao && window.kakao.maps && mapRef.current) {
+      drawMap(hotel);
+    }
+  }, [hotel]);
+
+  // 지도 그려주는 헬퍼
+  const drawMap = ({ latitude, longitude }) => {
+    const container = mapRef.current;
+    const options = {
+      center: new window.kakao.maps.LatLng(latitude, longitude),
+      level: 4,
+    };
+    const map = new window.kakao.maps.Map(container, options);
+    new window.kakao.maps.Marker({
+      position: new window.kakao.maps.LatLng(latitude, longitude),
+      map,
+    });
+  };
 
 
   const handleLogout = async () => {

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import { ko } from 'date-fns/locale';
@@ -24,6 +24,7 @@ const ReservationPage = () => {
     const [startDate, endDate] = dateRange;
     const [activeTab, setActiveTab] = useState(null);
     const [showAllReviews, setShowAllReviews] = useState(false);
+    const [hotel, setHotel] = useState(null); // 백엔드 호텔 정보 추가
 
     const introRef = useRef(null);
     const roomsRef = useRef(null);
@@ -44,9 +45,63 @@ const ReservationPage = () => {
         }
     };
 
+    const mapRef = useRef(null);
     const [reviews, setReviews] = useState([]);
     const [newReview, setNewReview] = useState("");
     const [newScore, setNewScore] = useState(10); // 기본값 10점
+
+    // --- 2) 카카오 스크립트 한 번만 로드 ---
+      useEffect(() => {
+        if (window.kakao && window.kakao.maps) return;
+        const script = document.createElement('script');
+        script.src =
+          'https://dapi.kakao.com/v2/maps/sdk.js?appkey=d14da4067c563de35ba14987b99bdb89&autoload=false';
+        script.async = true;
+        document.head.appendChild(script);
+        // SDK 로드완료 시점에 초기화 콜백 등록
+        script.onload = () => {
+          window.kakao.maps.load(() => {
+            // 호텔 데이터가 이미 있으면 즉시 그려주고
+            if (hotel) drawMap(hotel);
+          });
+        };
+        return () => {
+          document.head.removeChild(script);
+        };
+      }, [hotel]);  // hotel 바뀔 때도 재실행
+    
+      // --- 3) 호텔 정보 fetch ---
+      useEffect(() => {
+        const hotelId = 1;  // 예시
+        fetch(`http://localhost:8080/api/hotels/${hotelId}`, { credentials: 'include' })
+          .then(res => {
+            if (!res.ok) throw new Error('호텔을 못 찾음');
+            return res.json();
+          })
+          .then(data => setHotel(data))
+          .catch(console.error);
+      }, []);
+    
+      // --- 4) hotel 상태 변경 시 지도 그리기 ---
+      useEffect(() => {
+        if (hotel && window.kakao && window.kakao.maps && mapRef.current) {
+          drawMap(hotel);
+        }
+      }, [hotel]);
+    
+      // 지도 그려주는 헬퍼
+      const drawMap = ({ latitude, longitude }) => {
+        const container = mapRef.current;
+        const options = {
+          center: new window.kakao.maps.LatLng(latitude, longitude),
+          level: 4,
+        };
+        const map = new window.kakao.maps.Map(container, options);
+        new window.kakao.maps.Marker({
+          position: new window.kakao.maps.LatLng(latitude, longitude),
+          map,
+        });
+      };
 
     const handleAddReview = () => {
         if (newReview.trim() === "") return;
@@ -198,23 +253,28 @@ const ReservationPage = () => {
                         <span className={styles.reviewCount}>리뷰 {reviews.length}개</span>
                     </div>
                 </div>
-                <div className={styles.mapPreviewBox}>
-                    <iframe
-                        title="지도"
-                        src="https://maps.google.com/maps?q=해운대구 해운대해변로 296&t=&z=15&ie=UTF8&iwloc=&output=embed"
-                        className={styles.mapIframe}
-                        loading="lazy"
-                    ></iframe>
-                    <div className={styles.mapAddress}>
-                        해운대구 해운대해변로 296, 부산광역시, 부산광역시, 612-010<br />
-                        <a
-                            className={styles.mapLink}
-                            href="https://www.google.com/maps?q=해운대구 해운대해변로 296"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            지도에서 보기
-                        </a>
+                <div>
+                    <h3>지도 위치</h3>
+                    <div className={styles.mapPreviewBox}>
+
+                        {/* 1) 지도 섹션 백엔드 테스트용추가*/}
+                        <section className={styles.mapSection}>
+                            <div
+                                ref={mapRef}
+                                className={styles.mapContainer}
+                            />
+                            <div className={styles.mapAddress}>
+                                해운대구 해운대해변로 296, 부산광역시, 부산광역시, 612-010<br />
+                                <a
+                                    className={styles.mapLink}
+                                    href="https://www.google.com/maps?q=해운대구 해운대해변로 296"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    지도에서 보기
+                                </a>
+                            </div>
+                        </section>
                     </div>
                 </div>
             </div>
