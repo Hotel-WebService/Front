@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import { ko } from 'date-fns/locale';
@@ -12,6 +12,7 @@ import paradise1 from '../assets/paradise1.jpg';
 import paradise2 from '../assets/paradise2.jpg';
 import paradise3 from '../assets/paradise3.jpg';
 import paradise4 from '../assets/paradise4.jpg';
+import paradise5 from '../assets/paradise5.jpg';
 
 
 const ReservationPage = () => {
@@ -19,14 +20,73 @@ const ReservationPage = () => {
     const [dateRange, setDateRange] = useState([null, null]);
     const [startDate, endDate] = dateRange;
     const [activeTab, setActiveTab] = useState(null);
+    const [showAllReviews, setShowAllReviews] = useState(false);
 
-    const handleTabClick = (tab, scrollOffset) => {
+    const introRef = useRef(null);
+    const roomsRef = useRef(null);
+    const policyRef = useRef(null);
+    const reviewsRef = useRef(null);
+
+    const handleTabClick = (tab) => {
         setActiveTab(tab);
-        window.scrollBy({
-            top: scrollOffset,
-            behavior: 'smooth'
-        });
+        const scrollToRef = {
+            intro: introRef,
+            rooms: roomsRef,
+            policy: policyRef,
+            reviews: reviewsRef
+        }[tab];
+
+        if (scrollToRef?.current) {
+            scrollToRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     };
+
+    const [reviews, setReviews] = useState([]);
+    const [newReview, setNewReview] = useState("");
+    const [newScore, setNewScore] = useState(10); // 기본값 10점
+
+    const handleAddReview = () => {
+        if (newReview.trim() === "") return;
+
+        const review = {
+            id: reviews.length + 1,
+            user: "익명",
+            date: new Date().toISOString().split("T")[0],
+            content: `${newScore}/10 ${newReview}`,
+            score: newScore
+        };
+        setReviews([review, ...reviews]);
+        setNewReview("");
+        setNewScore(10);
+    };
+
+    const averageScore = reviews.length
+        ? (reviews.reduce((sum, r) => sum + (r.score || 0), 0) / reviews.length).toFixed(1)
+        : "0.0";
+
+    const rooms = [
+        {
+            id: 1,
+            name: "디럭스룸, 부분 바다 전망 (Annex Building)",
+            specs: ["3명", "더블침대 1개", "2인 수용장 무료 이용(1일 기준)", "스파 이용"],
+            price: 525000,
+            image: paradise2,
+        },
+        {
+            id: 2,
+            name: "디럭스 더블룸, 바다 전망 (Main Building)",
+            specs: ["3명", "더블침대 1개", "2인 수영장 무료 이용(1일 기준)", "스파 이용", "바다 전망"],
+            price: 575000,
+            image: paradise3,
+        },
+        {
+            id: 3,
+            name: "이그제큐티브 더블룸, 시내 전망 (Main Building)",
+            specs: ["2인", "더블침대 1개", "2인 유럽식 아침 식사", "2인 수영장 무료 이용(1일 기준)", "시내 전망"],
+            price: 495000,
+            image: paradise4,
+        },
+    ];
 
     return (
         <div>
@@ -78,11 +138,11 @@ const ReservationPage = () => {
             <a href="#" className={styles.backLink}>+ 돌아가기</a>
 
             <section className={styles.hero}>
-                <div className={styles.big}><img style={{ backgroundImage: `url(${paradise1})` }} /></div>
-                <div className={styles.thumb1}></div>
-                <div className={styles.thumb2}></div>
-                <div className={styles.thumb3}></div>
-                <div className={styles.thumb4}>
+                <div className={styles.big} style={{ backgroundImage: `url(${paradise1})` }}></div>
+                <div className={styles.thumb1} style={{ backgroundImage: `url(${paradise2})` }}></div>
+                <div className={styles.thumb2} style={{ backgroundImage: `url(${paradise3})` }}></div>
+                <div className={styles.thumb3} style={{ backgroundImage: `url(${paradise4})` }}></div>
+                <div className={styles.thumb4} style={{ backgroundImage: `url(${paradise5})` }}>
                     <div className={styles.more}>+124</div>
                 </div>
             </section>
@@ -91,32 +151,32 @@ const ReservationPage = () => {
                 <div className={styles.sectionTabs}>
                     <button
                         className={activeTab === 'intro' ? styles.active : ''}
-                        onClick={() => handleTabClick('intro', 100)}
+                        onClick={() => handleTabClick('intro')}
                     >
                         소개
                     </button>
                     <button
                         className={activeTab === 'rooms' ? styles.active : ''}
-                        onClick={() => handleTabClick('rooms', 350)}
+                        onClick={() => handleTabClick('rooms')}
                     >
                         객실
                     </button>
                     <button
                         className={activeTab === 'policy' ? styles.active : ''}
-                        onClick={() => handleTabClick('policy', 1600)}
+                        onClick={() => handleTabClick('policy')}
                     >
                         정책
                     </button>
                     <button
                         className={activeTab === 'reviews' ? styles.active : ''}
-                        onClick={() => handleTabClick('reviews', 2200)}
+                        onClick={() => handleTabClick('reviews')}
                     >
                         리뷰
                     </button>
                 </div>
             </div>
 
-            <div className={styles.hotelInfo}>
+            <div ref={introRef} className={styles.hotelInfo}>
                 <div className={styles.hotelDetails}>
                     <div className={styles.hotelTitle}>파라다이스 호텔 부산</div>
                     <div className={styles.hotelSubtitle}>Paradise Hotel Busan</div>
@@ -131,8 +191,8 @@ const ReservationPage = () => {
                         <span className={styles.facility}>공항 셔틀</span>
                     </div>
                     <div className={styles.ratingContainer}>
-                        <span className={styles.ratingBadge}>★ 9.7</span>
-                        <span className={styles.reviewCount}>리뷰 28개</span>
+                        <span className={styles.ratingBadge}>★ {averageScore}</span>
+                        <span className={styles.reviewCount}>리뷰 {reviews.length}개</span>
                     </div>
                 </div>
                 <div className={styles.mapPreviewBox}>
@@ -158,7 +218,7 @@ const ReservationPage = () => {
 
             <div className={styles.divider}></div>
 
-            <div className={styles.roomInfo}>객실 정보</div>
+            <div ref={roomsRef} className={styles.roomInfo}>객실 정보</div>
             <div className={styles.roomFilters}>
                 <div className={styles.dateBox}>
                     <label className={styles.dateLabel}>입실일</label>
@@ -194,17 +254,27 @@ const ReservationPage = () => {
             </div>
 
             <div className={styles.rooms}>
-                {[1, 2, 3].map((_, idx) => (
-                    <div key={idx} className={styles.roomCard}>
-                        <div className={styles.img}></div>
+                {rooms.map(room => (
+                    <div key={room.id} className={styles.roomCard}>
+                        <div
+                            className={styles.img}
+                            style={{ backgroundImage: `url(${room.image})` }}
+                        ></div>
                         <div className={styles.roomContent}>
                             <div className={styles.roomName}>
-                                디럭스 더블룸, 시내 전망 <span>(Main Building)</span>
+                                {room.name}
                             </div>
                             <div className={styles.roomSpecs}>
-                                - 32㎡<br />- 더블베드 1개<br />- 2인 투숙 가능<br />- 조식 포함
+                                {room.specs.map((spec, idx) => (
+                                    <div key={idx}>- {spec}</div>
+                                ))}
                             </div>
-                            <div className={styles.roomPrice}>₩{525000 + idx * 50000}</div>
+                            <div className={styles.priceBox}>
+                                <div className={styles.price}>₩{room.price.toLocaleString()}</div>
+                                <div className={styles.totalPrice}>총 요금: ₩{Math.round(room.price * 1.18).toLocaleString()}</div>
+                                <div className={styles.taxNote}>세금 및 수수료 포함</div>
+                            </div>
+
                             <button className={styles.reserveBtn}>예약하기</button>
                         </div>
                     </div>
@@ -213,7 +283,7 @@ const ReservationPage = () => {
 
             <div className={styles.divider}></div>
 
-            <h3 className={styles.policyHeader}>요금 및 정책</h3>
+            <h3 ref={policyRef} className={styles.policyHeader}>요금 및 정책</h3>
             <ul className={styles.policyList}>
                 <li>취소 시 취소료: 무료</li>
                 <li>어린이(12세 이하) 무료 투숙</li>
@@ -223,16 +293,48 @@ const ReservationPage = () => {
 
             <div className={styles.divider}></div>
 
-            <div className={styles.reviews}>
+            <div ref={reviewsRef} className={styles.reviews}>
                 <div className={styles.reviewsHeader}>
-                    <div className={styles.reviewsScore}>9.7<span>/10</span></div>
-                    <div className={styles.reviewsSub}>리뷰 수 27개</div>
+                    <div className={styles.reviewsScore}>{averageScore}<span>/10</span></div>
+                    <div className={styles.reviewsSub}>리뷰 수 {reviews.length}개</div>
                 </div>
-                <div className={styles.review}>
-                    <p>10/10 최고예요</p>
-                    <div className={styles.reviewMeta}>NickName · 2025/04/23</div>
+
+                <div style={{ marginTop: "1rem" }}>
+                    <label htmlFor="score">별점 : 10 /</label>
+                    <select
+                        id="score"
+                        value={newScore}
+                        onChange={(e) => setNewScore(Number(e.target.value))}
+                        style={{ marginLeft: "0.5rem", padding: "4px" }}
+                    >
+                        {Array.from({ length: 11 }, (_, i) => (
+                            <option key={i} value={i}>{i}점</option>
+                        ))}
+                    </select>
                 </div>
-                <button className={styles.btnMore}>더보기</button>
+                <textarea
+                    className={styles.reviewInput}
+                    placeholder="리뷰를 작성하세요"
+                    value={newReview}
+                    onChange={(e) => setNewReview(e.target.value)}
+                />
+
+
+
+                <button className={styles.reserveBtn} onClick={handleAddReview}>등록하기</button>
+
+                {(showAllReviews ? reviews : reviews.slice(0, 3)).map(r => (
+                    <div key={r.id} className={styles.review}>
+                        <p>{r.content}</p>
+                        <div className={styles.reviewMeta}>{r.user} · {r.date}</div>
+                    </div>
+                ))}
+
+                {reviews.length > 3 && (
+                    <button className={styles.btnMore} onClick={() => setShowAllReviews(!showAllReviews)}>
+                        {showAllReviews ? "접기" : "더보기"}
+                    </button>
+                )}
             </div>
 
             {/* Footer */}
