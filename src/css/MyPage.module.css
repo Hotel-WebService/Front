@@ -47,8 +47,8 @@
 }
 
 .reservationCard img {
-    width: 400px;
-    height: 260px;
+    width: 500px;
+    height: 300px;
     object-fit: cover;
     background-size: cover;
     background-repeat: no-repeat;
@@ -136,4 +136,56 @@
 
 .hello {
     margin-left: 2.5rem;
+}
+
+.overlay {
+  background-color: rgba(0, 0, 0, 0.5);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 1200px;
+  text-align: center;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
+}
+
+.copyBtn,
+.closeBtn {
+  margin: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.copyBtn {
+  background-color: #007bff;
+  color: white;
+}
+
+.closeBtn {
+  background-color: #ccc;
+}
+
+.previewBox {
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.previewImage {
+  max-width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 8px;
 }

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import { ko } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
+import Modal from 'react-modal';
 import styles from '../css/ReservationPage.module.css';
 import instargram from '../assets/instargram.jpg';
 import facebook from '../assets/facebook.jpg';
@@ -20,16 +21,40 @@ import paradiseRoom3 from '../assets/paradiseRoom3.jpg';
 
 const ReservationPage = () => {
 
+    const [userInfo, setUserInfo] = useState({ name: '' });
     const [dateRange, setDateRange] = useState([null, null]);
     const [startDate, endDate] = dateRange;
     const [activeTab, setActiveTab] = useState(null);
     const [showAllReviews, setShowAllReviews] = useState(false);
     const [hotel, setHotel] = useState(null); // 백엔드 호텔 정보 추가
 
+    const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+    Modal.setAppElement('#root');
+
+    const openGalleryModal = () => setIsGalleryOpen(true);
+    const closeGalleryModal = () => setIsGalleryOpen(false);
+
     const introRef = useRef(null);
     const roomsRef = useRef(null);
     const policyRef = useRef(null);
     const reviewsRef = useRef(null);
+
+    useEffect(() => {
+        fetch('http://localhost:8080/api/userinfo', {
+            method: 'GET',
+            credentials: 'include',
+        })
+            .then(res => {
+                if (!res.ok) throw new Error('사용자 정보 불러오기 실패');
+                return res.json();
+            })
+            .then(data => {
+                setUserInfo({ name: data.name });
+            })
+            .catch(err => {
+                console.error('사용자 정보 로드 실패:', err);
+            });
+    }, []);
 
     const handleTabClick = (tab) => {
         setActiveTab(tab);
@@ -108,11 +133,12 @@ const ReservationPage = () => {
 
         const review = {
             id: reviews.length + 1,
-            user: "익명",
+            user: userInfo.name || "익명", // ✅ 사용자 이름 적용
             date: new Date().toISOString().split("T")[0],
             content: `${newScore}/10 ${newReview}`,
             score: newScore
         };
+
         setReviews([review, ...reviews]);
         setNewReview("");
         setNewScore(10);
@@ -146,6 +172,14 @@ const ReservationPage = () => {
         },
     ];
 
+    const imageList = [
+        paradise1,
+        paradise2,
+        paradise3,
+        paradise4,
+        paradise5,
+    ];
+
     return (
         <div>
             {/* Header */}
@@ -154,7 +188,7 @@ const ReservationPage = () => {
                     <Link to="/">🔴 Stay Manager</Link>
                 </div>
                 <div className="navLinks">
-                    <a>OOO님</a>
+                    <a>{userInfo.name}님</a>
                     <a href="/myPage">MyPage</a>
                     <a href="/savedPage">찜 목록</a>
                     <a href="/">로그아웃</a>
@@ -201,7 +235,9 @@ const ReservationPage = () => {
                 <div className={styles.thumb2} style={{ backgroundImage: `url(${paradise3})` }}></div>
                 <div className={styles.thumb3} style={{ backgroundImage: `url(${paradise4})` }}></div>
                 <div className={styles.thumb4} style={{ backgroundImage: `url(${paradise5})` }}>
-                    <div className={styles.more}>+124</div>
+                    <div className={styles.thumb4} style={{ backgroundImage: `url(${paradise5})` }} onClick={openGalleryModal}>
+                        <div className={styles.more}>+{imageList.length - 5}</div>
+                    </div>
                 </div>
             </section>
 
@@ -436,6 +472,23 @@ const ReservationPage = () => {
                 </div>
             </footer>
             {/* Footer */}
+
+
+            <Modal
+                isOpen={isGalleryOpen}
+                onRequestClose={closeGalleryModal}
+                contentLabel="전체 사진 보기"
+                className={styles.modal}
+                overlayClassName={styles.overlay}
+            >
+                <h2>전체 사진</h2>
+                <div className={styles.galleryGrid}>
+                    {imageList.map((img, idx) => (
+                        <img key={idx} src={img} alt={`호텔 사진 ${idx + 1}`} className={styles.galleryImg} />
+                    ))}
+                </div>
+                <button onClick={closeGalleryModal} className={styles.closeBtn}>닫기</button>
+            </Modal>
         </div>
     );
 };

@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import styles from '../css/MyPage.module.css';
+import Modal from 'react-modal';
+import html2canvas from 'html2canvas';
 import h1 from '../assets/h1.jpg';
 import instargram from '../assets/instargram.jpg';
 import facebook from '../assets/facebook.jpg';
@@ -16,8 +18,65 @@ const MyPage = () => {
     punNumber: ''
   });
 
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
+  Modal.setAppElement('#root');
+
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const navigate = useNavigate();
+  const reservationRef = useRef(null);
+
+  const closeShareModal = () => setIsShareModalOpen(false);
+
+  const [isPasswordEditing, setIsPasswordEditing] = useState(false);
+
+  // 모달 캡쳐 복사 기능
+  const handleCaptureAndCopy = async () => {
+    try {
+      const canvas = await html2canvas(reservationRef.current, {
+        useCORS: true,  // 외부 이미지 대응
+        scale: 2        // 고화질
+      });
+
+      canvas.toBlob(async (blob) => {
+        if (navigator.clipboard && blob) {
+          try {
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ]);
+            alert('이미지가 클립보드에 복사되었습니다!');
+          } catch (err) {
+            alert('복사 실패: 보안 정책 또는 브라우저 제한일 수 있습니다.');
+            console.error(err);
+          }
+        } else {
+          alert('클립보드 API를 지원하지 않는 브라우저입니다.');
+        }
+      });
+    } catch (err) {
+      console.error('캡처 실패:', err);
+      alert('예약 정보를 캡처하는 데 실패했습니다.');
+    }
+  };
+
+  // 모달 캡쳐영역 미리보기
+  const generatePreview = async () => {
+    try {
+      const canvas = await html2canvas(reservationRef.current, {
+        useCORS: true,
+        scale: 2
+      });
+      const dataUrl = canvas.toDataURL('image/png');
+      setPreviewImage(dataUrl);
+    } catch (err) {
+      console.error('미리보기 캡처 실패:', err);
+    }
+  };
+
+  const openShareModal = () => {
+    setIsShareModalOpen(true);
+    generatePreview(); // 모달 열릴 때 미리보기 생성
+  };
 
   // 1) 마운트 시 사용자 정보 가져오기 백엔드추가
   useEffect(() => {
@@ -128,7 +187,7 @@ const MyPage = () => {
       <div className={styles.divider}></div>
 
       <h2 className={styles.h2}>나의 예약현황</h2>
-      <div className={styles.reservationCard}>
+      <div className={styles.reservationCard} ref={reservationRef}>
         <img style={{ backgroundImage: `url(${h1})` }} />
         <div className={styles.reservationInfo}>
           <div className={styles.sb}>
@@ -136,7 +195,7 @@ const MyPage = () => {
             <p>예약자 성함 : OOO</p>
           </div>
           <div className={styles.sb}>
-            <p style={{ marginBottom: '7rem' }}>해운대</p>
+            <p style={{ marginBottom: '9.5rem' }}>해운대</p>
             <p>객실 : 트윈베드 오션뷰 (2인)</p>
           </div>
           <div className={styles.sb}>
@@ -151,7 +210,7 @@ const MyPage = () => {
       </div>
 
       <div className={styles.reservationButtons}>
-        <button>공유하기</button>
+        <button onClick={openShareModal}>공유하기</button>
         <button>결제내역</button>
         <button>예약취소</button>
       </div>
@@ -181,7 +240,23 @@ const MyPage = () => {
 
         <div className={styles.halfGroup}>
           <label>비밀번호
-            <input type="password" name="loginPassword" value={userInfo.loginPassword} onChange={handleChange} className="full-width" />
+            {isPasswordEditing ? (
+              <input
+                type="password"
+                name="loginPassword"
+                value={userInfo.loginPassword}
+                onChange={handleChange}
+                className="full-width"
+              />
+            ) : (
+              <input
+                type="text"
+                value="******"
+                className="full-width"
+                readOnly
+                onFocus={() => setIsPasswordEditing(true)} // 클릭하면 진짜 input으로 전환
+              />
+            )}
           </label>
         </div>
 
@@ -232,6 +307,26 @@ const MyPage = () => {
         </div>
       </footer>
       {/* Footer */}
+
+      <Modal
+        isOpen={isShareModalOpen}
+        onRequestClose={closeShareModal}
+        contentLabel="공유 모달"
+        className={styles.modal}
+        overlayClassName={styles.overlay}
+      >
+        <h2>공유하기</h2>
+        {previewImage && (
+          <div className={styles.previewBox}>
+            <p style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>캡처 미리보기</p>
+            <img src={previewImage} alt="예약정보 미리보기" className={styles.previewImage} />
+          </div>
+        )}
+        <button onClick={handleCaptureAndCopy} className={styles.copyBtn}>
+          예약정보 캡처해서 복사
+        </button>
+        <button onClick={closeShareModal} className={styles.closeBtn}>닫기</button>
+      </Modal>
     </div>
   );
 };
