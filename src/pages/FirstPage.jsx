@@ -61,7 +61,7 @@ const FirstPage = () => {
       });
   }, []);
 
-// --- 2) 카카오 스크립트 한 번만 로드 ---
+  // --- 2) 카카오 스크립트 한 번만 로드 ---
   useEffect(() => {
     if (window.kakao && window.kakao.maps) return;
     const script = document.createElement('script');
@@ -189,7 +189,7 @@ const FirstPage = () => {
                 selected={checkin}
                 onChange={(date) => setCheckin(date)}
                 placeholderText="날짜 선택"
-                dateFormat="yyyy/MM/dd" 
+                dateFormat="yyyy/MM/dd"
                 popperPlacement="bottom-start"
                 showPopperArrow={false}
                 locale={ko}
@@ -201,7 +201,7 @@ const FirstPage = () => {
                 selected={checkout}
                 onChange={(date) => setCheckout(date)}
                 placeholderText="날짜 선택"
-                dateFormat="yyyy/MM/dd" 
+                dateFormat="yyyy/MM/dd"
                 popperPlacement="bottom-start"
                 showPopperArrow={false}
                 locale={ko}
@@ -220,7 +220,9 @@ const FirstPage = () => {
             />
           </div>
 
-          <button className={styles.searchBtn}>검색</button>
+          <Link to="/listPage">
+            <button className={styles.searchBtn}>검색</button>
+          </Link>
         </div>
       </section>
 
@@ -256,8 +258,8 @@ const FirstPage = () => {
           }}
           loop={true}
           autoplay={{
-            delay: 5000,    
-            disableOnInteraction: false 
+            delay: 5000,
+            disableOnInteraction: false
           }}
           slidesPerView={1}
         >
@@ -300,7 +302,7 @@ const FirstPage = () => {
           </div>
         </div>
       </section>
-
+          
       {/* Footer */}
       <footer>
         <div className="footer-top">
@@ -310,20 +312,18 @@ const FirstPage = () => {
 
           <div className="footer-right">
             <div className="footer-section">
-              <h4>Topic</h4>
+              <h4>지원</h4>
               <ul>
-                <li>Page</li>
-                <li>Page</li>
-                <li>Page</li>
+                <li>자주 묻는 질문</li>
+                <li>연락처</li>
               </ul>
             </div>
 
             <div className="footer-section">
-              <h4>Topic</h4>
+              <h4>정책</h4>
               <ul>
-                <li>Page</li>
-                <li>Page</li>
-                <li>Page</li>
+                <li>이용약관</li>
+                <li>개인정보 보호</li>
               </ul>
             </div>
           </div>

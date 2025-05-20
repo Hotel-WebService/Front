@@ -12,38 +12,38 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     // console.log('로그인 시도:', { loginID, loginPassword });
     // 여기에 로그인 API 연동 가능
 
-  // spring-security 기본 form-login 처리에 맞춘 URLSearchParams
+    // spring-security 기본 form-login 처리에 맞춘 URLSearchParams
     const formData = new URLSearchParams();
     formData.append('loginID', loginID);
     formData.append('loginPassword', loginPassword);
 
-try {
-    const res = await fetch('http://localhost:8080/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: formData.toString(),
-      credentials: 'include'     // ✅ 세션 쿠키 주고받기
-      
-    });
+    try {
+      const res = await fetch('http://localhost:8080/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: formData.toString(),
+        credentials: 'include'     // ✅ 세션 쿠키 주고받기
 
-    if (res.ok) {
-      navigate('/');   // 로그인 성공 시
-      
-    } else {
-      setError('아이디/비밀번호가 맞지 않습니다.');
+      });
+
+      if (res.ok) {
+        navigate('/');   // 로그인 성공 시
+
+      } else {
+        setError('아이디/비밀번호가 맞지 않습니다.');
+      }
+    } catch (err) {
+      setError('로그인 중 오류가 발생했습니다.');
     }
-  } catch (err) {
-    setError('로그인 중 오류가 발생했습니다.');
-  }
-};
+  };
 
   return (
     <div>
@@ -103,20 +103,18 @@ try {
 
           <div className="footer-right">
             <div className="footer-section">
-              <h4>Topic</h4>
+              <h4>지원</h4>
               <ul>
-                <li>Page</li>
-                <li>Page</li>
-                <li>Page</li>
+                <li>자주 묻는 질문</li>
+                <li>연락처</li>
               </ul>
             </div>
 
             <div className="footer-section">
-              <h4>Topic</h4>
+              <h4>정책</h4>
               <ul>
-                <li>Page</li>
-                <li>Page</li>
-                <li>Page</li>
+                <li>이용약관</li>
+                <li>개인정보 보호</li>
               </ul>
             </div>
           </div>

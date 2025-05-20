@@ -192,7 +192,7 @@ const SavedPage = () => {
             </div>
 
             {/* Footer */}
-            < footer >
+            <footer>
                 <div className="footer-top">
                     <div className="footer-section">
                         <div className="footer-logo">Stay Manager</div>
@@ -200,20 +200,18 @@ const SavedPage = () => {
 
                     <div className="footer-right">
                         <div className="footer-section">
-                            <h4>Topic</h4>
+                            <h4>지원</h4>
                             <ul>
-                                <li>Page</li>
-                                <li>Page</li>
-                                <li>Page</li>
+                                <li>자주 묻는 질문</li>
+                                <li>연락처</li>
                             </ul>
                         </div>
 
                         <div className="footer-section">
-                            <h4>Topic</h4>
+                            <h4>정책</h4>
                             <ul>
-                                <li>Page</li>
-                                <li>Page</li>
-                                <li>Page</li>
+                                <li>이용약관</li>
+                                <li>개인정보 보호</li>
                             </ul>
                         </div>
                     </div>

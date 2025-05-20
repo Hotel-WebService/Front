@@ -51,57 +51,57 @@ const ReservationPage = () => {
     const [newScore, setNewScore] = useState(10); // 기본값 10점
 
     // --- 2) 카카오 스크립트 한 번만 로드 ---
-      useEffect(() => {
+    useEffect(() => {
         if (window.kakao && window.kakao.maps) return;
         const script = document.createElement('script');
         script.src =
-          'https://dapi.kakao.com/v2/maps/sdk.js?appkey=d14da4067c563de35ba14987b99bdb89&autoload=false';
+            'https://dapi.kakao.com/v2/maps/sdk.js?appkey=d14da4067c563de35ba14987b99bdb89&autoload=false';
         script.async = true;
         document.head.appendChild(script);
         // SDK 로드완료 시점에 초기화 콜백 등록
         script.onload = () => {
-          window.kakao.maps.load(() => {
-            // 호텔 데이터가 이미 있으면 즉시 그려주고
-            if (hotel) drawMap(hotel);
-          });
+            window.kakao.maps.load(() => {
+                // 호텔 데이터가 이미 있으면 즉시 그려주고
+                if (hotel) drawMap(hotel);
+            });
         };
         return () => {
-          document.head.removeChild(script);
+            document.head.removeChild(script);
         };
-      }, [hotel]);  // hotel 바뀔 때도 재실행
-    
-      // --- 3) 호텔 정보 fetch ---
-      useEffect(() => {
+    }, [hotel]);  // hotel 바뀔 때도 재실행
+
+    // --- 3) 호텔 정보 fetch ---
+    useEffect(() => {
         const hotelId = 1;  // 예시
         fetch(`http://localhost:8080/api/hotels/${hotelId}`, { credentials: 'include' })
-          .then(res => {
-            if (!res.ok) throw new Error('호텔을 못 찾음');
-            return res.json();
-          })
-          .then(data => setHotel(data))
-          .catch(console.error);
-      }, []);
-    
-      // --- 4) hotel 상태 변경 시 지도 그리기 ---
-      useEffect(() => {
+            .then(res => {
+                if (!res.ok) throw new Error('호텔을 못 찾음');
+                return res.json();
+            })
+            .then(data => setHotel(data))
+            .catch(console.error);
+    }, []);
+
+    // --- 4) hotel 상태 변경 시 지도 그리기 ---
+    useEffect(() => {
         if (hotel && window.kakao && window.kakao.maps && mapRef.current) {
-          drawMap(hotel);
+            drawMap(hotel);
         }
-      }, [hotel]);
-    
-      // 지도 그려주는 헬퍼
-      const drawMap = ({ latitude, longitude }) => {
+    }, [hotel]);
+
+    // 지도 그려주는 헬퍼
+    const drawMap = ({ latitude, longitude }) => {
         const container = mapRef.current;
         const options = {
-          center: new window.kakao.maps.LatLng(latitude, longitude),
-          level: 4,
+            center: new window.kakao.maps.LatLng(latitude, longitude),
+            level: 4,
         };
         const map = new window.kakao.maps.Map(container, options);
         new window.kakao.maps.Marker({
-          position: new window.kakao.maps.LatLng(latitude, longitude),
-          map,
+            position: new window.kakao.maps.LatLng(latitude, longitude),
+            map,
         });
-      };
+    };
 
     const handleAddReview = () => {
         if (newReview.trim() === "") return;
@@ -409,20 +409,18 @@ const ReservationPage = () => {
 
                     <div className="footer-right">
                         <div className="footer-section">
-                            <h4>Topic</h4>
+                            <h4>지원</h4>
                             <ul>
-                                <li>Page</li>
-                                <li>Page</li>
-                                <li>Page</li>
+                                <li>자주 묻는 질문</li>
+                                <li>연락처</li>
                             </ul>
                         </div>
 
                         <div className="footer-section">
-                            <h4>Topic</h4>
+                            <h4>정책</h4>
                             <ul>
-                                <li>Page</li>
-                                <li>Page</li>
-                                <li>Page</li>
+                                <li>이용약관</li>
+                                <li>개인정보 보호</li>
                             </ul>
                         </div>
                     </div>

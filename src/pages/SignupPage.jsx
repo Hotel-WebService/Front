@@ -19,57 +19,138 @@ const SignupPage = () => {
         birthday: ''
     });
 
-const [agreed, setAgreed] = useState(false);
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
+    const [idValid, setIdValid] = useState(null);
+    const [idCheckResult, setIdCheckResult] = useState(null);
+    const [pwValid, setPwValid] = useState(null);
+    const [pwMatch, setPwMatch] = useState(null);
+    const [agreed, setAgreed] = useState(false);
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+    // 아이디 검사 함수
+    const validateID = (value) => {
+        if (value.length >= 6 && value.length <= 20) {
+            setIdValid(true);
+        } else {
+            setIdValid(false);
+        }
+    };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    // 1) 비밀번호 확인
-    if (formData.loginPassword !== formData.passwordConfirm) {
-      setError('비밀번호가 일치하지 않습니다.');
-      return;
-    }
+    // 비밀번호 검사 함수
+    const validatePW = (value) => {
+        if (value.length >= 8) {
+            setPwValid(true);
+        } else {
+            setPwValid(false);
+        }
+    };
 
-    // 2) 필수 동의 체크
-    if (!agreed) {
-      setError('개인정보 수집 및 이용에 동의하셔야 합니다.');
-      return;
-    }
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
 
-    try {
-      const res = await fetch('http://localhost:8080/api/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          loginID: formData.loginID,
-          loginPassword: formData.loginPassword,
-          punNumber: formData.punNumber,
-          email: formData.email,
-          birthday: formData.birthday
-        })
-      });
+        if (name === 'loginID') {
+            validateID(value);
+        }
 
-      const data = await res.json();
-      if (res.ok) {
-        alert('회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.');
-        navigate('/login');
-      } else {
-        // 백엔드에서 { error: "메시지" } 형태로 내려오면 표시
-        setError(data.error || '회원가입에 실패했습니다.');
-      }
-    } catch (err) {
-      console.error(err);
-      setError('서버와 통신 중 오류가 발생했습니다.');
-    }
-  };
+        if (name === 'loginPassword') {
+            validatePW(value);
+            setPwMatch(value === formData.passwordConfirm);
+        }
+
+        if (name === 'passwordConfirm') {
+            setPwMatch(formData.loginPassword === value);
+        }
+    };
+
+    const handleCheckID = async () => {
+        if (formData.loginID.length < 6 || formData.loginID.length > 20) {
+            alert('아이디는 6자 이상 20자 이하로 입력해주세요.');
+            return;
+        }
+
+        try {
+            const res = await fetch(`http://localhost:8080/api/check-id?loginID=${formData.loginID}`);
+            const data = await res.json();
+
+            if (res.ok) {
+                if (data.available) {
+                    setIdCheckResult(true);
+                    alert('사용 가능한 아이디입니다.');
+                } else {
+                    setIdCheckResult(false);
+                    alert('이미 사용 중인 아이디입니다.');
+                }
+            } else {
+                alert('아이디 중복 확인 중 오류가 발생했습니다.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('서버 통신 오류로 중복 확인에 실패했습니다.');
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+
+        // 아이디 길이 조건 검사 (6자 이상, 20자 이하)
+        if (formData.loginID.length < 6 || formData.loginID.length > 20) {
+            alert('아이디는 6자 이상 20자 이하로 입력해주세요.');
+            return;
+        }
+
+        // 아이디 중복 확인
+        if (idCheckResult !== true) {
+            alert('아이디 중복 확인을 먼저 해주세요.');
+            return;
+        }
+
+        // 비밀번호 길이 조건 검사
+        if (formData.loginPassword.length < 8) {
+            alert('비밀번호는 8자 이상으로 입력해주세요.');
+            return;
+        }
+
+        // 1) 비밀번호 확인
+        if (formData.loginPassword !== formData.passwordConfirm) {
+            alert('비밀번호가 일치하지 않습니다.');
+            return;
+        }
+
+        // 2) 필수 동의 체크
+        if (!agreed) {
+            alert('개인정보 수집 및 이용에 동의하셔야 합니다.');
+            return;
+        }
+
+        try {
+            const res = await fetch('http://localhost:8080/api/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: formData.name,
+                    loginID: formData.loginID,
+                    loginPassword: formData.loginPassword,
+                    punNumber: formData.punNumber,
+                    email: formData.email,
+                    birthday: formData.birthday
+                })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                alert('회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.');
+                navigate('/login');
+            } else {
+                // 백엔드에서 { error: "메시지" } 형태로 내려오면 표시
+                alert(data.error || '회원가입에 실패했습니다.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('서버와 통신 중 오류가 발생했습니다.');
+        }
+    };
 
     return (
         <div className={styles.body}>
@@ -110,9 +191,21 @@ const [agreed, setAgreed] = useState(false);
                                 required
                                 className={styles.input}
                             />
-                            <button type="button" className={styles.button}>중복확인</button>
+                            <button
+                                type="button"
+                                onClick={handleCheckID}
+                                className={styles.button}
+                            >
+                                중복확인
+                            </button>
                         </div>
-                        <span className={styles.error}>사용할 수 없는 아이디입니다</span>
+                        {/* 메시지 표시 */}
+                        {idCheckResult === true && (
+                            <span className={styles.success}>사용 가능한 아이디입니다</span>
+                        )}
+                        {idCheckResult === false && (
+                            <span className={styles.error}>이미 사용 중인 아이디입니다</span>
+                        )}
                     </div>
 
                     <label className={styles.label}>비밀번호
@@ -125,7 +218,13 @@ const [agreed, setAgreed] = useState(false);
                             required
                             className={styles.input}
                         />
-                        <span className={styles.error}>사용할 수 없는 비밀번호입니다</span>
+                        {/* 유효성 메시지 조건부 렌더링 */}
+                        {pwValid === false && (
+                            <span className={styles.error}>사용할 수 없는 비밀번호입니다</span>
+                        )}
+                        {pwValid === true && (
+                            <span className={styles.success}>사용할 수 있는 비밀번호입니다</span>
+                        )}
                     </label>
 
                     <label className={styles.label}>비밀번호 확인
@@ -138,7 +237,12 @@ const [agreed, setAgreed] = useState(false);
                             required
                             className={styles.input}
                         />
-                        <span className={styles.error}>비밀번호가 일치하지 않습니다</span>
+                        {pwMatch === false && (
+                            <span className={styles.error}>비밀번호가 일치하지 않습니다</span>
+                        )}
+                        {pwMatch === true && (
+                            <span className={styles.success}>비밀번호가 일치합니다</span>
+                        )}
                     </label>
 
                     <label className={styles.label}>전화번호
@@ -208,20 +312,18 @@ const [agreed, setAgreed] = useState(false);
 
                     <div className="footer-right">
                         <div className="footer-section">
-                            <h4>Topic</h4>
+                            <h4>지원</h4>
                             <ul>
-                                <li>Page</li>
-                                <li>Page</li>
-                                <li>Page</li>
+                                <li>자주 묻는 질문</li>
+                                <li>연락처</li>
                             </ul>
                         </div>
 
                         <div className="footer-section">
-                            <h4>Topic</h4>
+                            <h4>정책</h4>
                             <ul>
-                                <li>Page</li>
-                                <li>Page</li>
-                                <li>Page</li>
+                                <li>이용약관</li>
+                                <li>개인정보 보호</li>
                             </ul>
                         </div>
                     </div>

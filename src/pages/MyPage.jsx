@@ -16,10 +16,10 @@ const MyPage = () => {
     punNumber: ''
   });
 
-const [isAuthenticated, setIsAuthenticated] = useState(true);  
-const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const navigate = useNavigate();
 
-// 1) 마운트 시 사용자 정보 가져오기 백엔드추가
+  // 1) 마운트 시 사용자 정보 가져오기 백엔드추가
   useEffect(() => {
     fetch('http://localhost:8080/api/userinfo', {
       method: 'GET',
@@ -54,39 +54,39 @@ const navigate = useNavigate();
 
   // 3) 수정하기 버튼 눌렀을 때 백엔드에 PUT, 백엔드 수정
   const handleSubmit = (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  fetch('http://localhost:8080/api/userinfo', {
-    method: 'PUT',
-    credentials: 'include',               // 세션 쿠키 포함
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name:      userInfo.name,
-      email:     userInfo.email,
-      loginPassword: userInfo.loginPassword,  // 빈 문자열이면 백엔드에서 무시
-      punNumber: userInfo.punNumber
+    fetch('http://localhost:8080/api/userinfo', {
+      method: 'PUT',
+      credentials: 'include',               // 세션 쿠키 포함
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: userInfo.name,
+        email: userInfo.email,
+        loginPassword: userInfo.loginPassword,  // 빈 문자열이면 백엔드에서 무시
+        punNumber: userInfo.punNumber
+      })
     })
-  })
-  .then(res => {
-    if (!res.ok) throw new Error('정보 수정 실패');
-    return res.json();
-  })
-  .then(data => {
-    if (data.status === 'success') {
-      alert('회원정보가 수정되었습니다.');
-      // 필요하면 다시 최신 정보 GET 등 추가
-    } else {
-      alert('수정에 실패했습니다.');
-    }
-  })
-  .catch(err => {
-    console.error(err);
-    alert('수정 중 오류가 발생했습니다.');
-  });
-};
+      .then(res => {
+        if (!res.ok) throw new Error('정보 수정 실패');
+        return res.json();
+      })
+      .then(data => {
+        if (data.status === 'success') {
+          alert('회원정보가 수정되었습니다.');
+          // 필요하면 다시 최신 정보 GET 등 추가
+        } else {
+          alert('수정에 실패했습니다.');
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert('수정 중 오류가 발생했습니다.');
+      });
+  };
 
-// 백엔드 로그아웃 추가
-const handleLogout = async () => {
+  // 백엔드 로그아웃 추가
+  const handleLogout = async () => {
     try {
       await fetch('http://localhost:8080/logout', {
         method: 'POST',
@@ -111,9 +111,9 @@ const handleLogout = async () => {
           <a href="/myPage">MyPage</a>
           <a href="/savedPage">찜 목록</a>
           <Link to="/"
-              onClick={handleLogout}
-              className={styles.logoutLink}
-            >로그아웃</Link>
+            onClick={handleLogout}
+            className={styles.logoutLink}
+          >로그아웃</Link>
         </div>
       </header>
       {/* Header */}
@@ -205,20 +205,18 @@ const handleLogout = async () => {
 
           <div className="footer-right">
             <div className="footer-section">
-              <h4>Topic</h4>
+              <h4>지원</h4>
               <ul>
-                <li>Page</li>
-                <li>Page</li>
-                <li>Page</li>
+                <li>자주 묻는 질문</li>
+                <li>연락처</li>
               </ul>
             </div>
 
             <div className="footer-section">
-              <h4>Topic</h4>
+              <h4>정책</h4>
               <ul>
-                <li>Page</li>
-                <li>Page</li>
-                <li>Page</li>
+                <li>이용약관</li>
+                <li>개인정보 보호</li>
               </ul>
             </div>
           </div>
