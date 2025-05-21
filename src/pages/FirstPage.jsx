@@ -144,7 +144,7 @@ const FirstPage = () => {
           style={{ backgroundImage: `url(${heroImage})` }}>
           <header className={styles.header}>
             <div className={styles.logo}>
-              <Link to="/">Stay Manager</Link>
+              <a href="/">Stay Manager</a>
             </div>
             <div className={styles.userLinks}>
               {isAuthenticated
@@ -172,7 +172,7 @@ const FirstPage = () => {
         <div className={styles.bookingForm}>
           <h2>원하는 숙소를 예약하세요</h2>
 
-          <div className={styles["form-group"]}>
+          <div>
             <label htmlFor="location">목적지</label>
             <input
               type="text"
@@ -183,7 +183,7 @@ const FirstPage = () => {
           </div>
 
           <div className={styles.sb}>
-            <div className={styles["form-group"]}>
+            <div>
               <label>체크인</label>
               <DatePicker
                 selected={checkin}
@@ -195,7 +195,7 @@ const FirstPage = () => {
                 locale={ko}
               />
             </div>
-            <div className={styles["form-group"]}>
+            <div>
               <label>체크아웃</label>
               <DatePicker
                 selected={checkout}
@@ -209,7 +209,7 @@ const FirstPage = () => {
             </div>
           </div>
 
-          <div className={styles["form-group"]}>
+          <div>
             <label htmlFor="guests">인원 수</label>
             <input
               type="number"
@@ -302,7 +302,7 @@ const FirstPage = () => {
           </div>
         </div>
       </section>
-          
+
       {/* Footer */}
       <footer>
         <div className="footer-top">

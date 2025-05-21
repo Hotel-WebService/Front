@@ -7,7 +7,7 @@ import SavedPage from './pages/SavedPage';
 import ListPage from './pages/ListPage';
 import ReservationPage from './pages/ReservationPage';
 import SignupPage from './pages/SignupPage';
-
+import HotelList from './pages/HotelList';
 
 function App() {
   return (
@@ -20,6 +20,7 @@ function App() {
         <Route path="/listPage" element={<ListPage />} />
         <Route path="/reservationPage" element={<ReservationPage />} />
         <Route path="/signupPage" element={<SignupPage />} />
+        <Route path="/hotelList" element={<HotelList />} />
       </Routes>
     </UserProvider>
   );

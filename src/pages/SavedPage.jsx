@@ -75,6 +75,7 @@ const SavedPage = () => {
             prev.map(item =>
                 item.id === id ? { ...item, liked: !item.liked } : item
             )
+            .filter(item => item.liked)
         );
     };
 

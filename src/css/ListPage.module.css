@@ -75,7 +75,7 @@
     border-radius: 6px;
 }
 
-.popular-keywords {
+.popularKeywords {
     margin-left: 1rem;
     padding: 0.6rem 1rem;
     border: 1px solid #007bff;
@@ -85,12 +85,24 @@
     cursor: pointer;
 }
 
-.sort-section {
-    padding: 0.8rem 3rem;
-    background: #fff;
+.emptyBox {
+    min-height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #777;
+    font-style: italic;
+    font-size: 1rem;
 }
 
-.sort-filter {
+.sortSection {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-bottom: 0rem;
+}
+
+.sortFilter {
     display: inline-flex;
     align-items: center;
     padding: 0.5rem 1rem;
@@ -101,18 +113,18 @@
     cursor: pointer;
 }
 
-.sort-filter label {
+.sortFilter label {
     margin-right: 0.5rem;
     color: #777;
 }
 
-.sort-filter .value {
+.sortFilter .value {
     font-weight: bold;
     display: flex;
     align-items: center;
 }
 
-.sort-filter .value i {
+.sortFilter .value i {
     margin-left: 0.3rem;
     font-size: 0.8rem;
 }
@@ -136,7 +148,7 @@
     /* 시작 위치가 올라가도록 조정 */
 }
 
-.input-field {
+.inputField {
     border: none;
     outline: none;
     font-size: 0.9rem;
@@ -145,52 +157,59 @@
     background: transparent;
 }
 
-.filter-section {
+.content {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    /* 좌우 고정 */
+    width: 70%;
+}
+
+.filterSection {
     margin-left: 2rem;
 }
 
-.filter-section h4 {
+.filterSection h4 {
     margin-bottom: 0.8rem;
     font-size: 1rem;
     font-weight: bold;
 }
 
-.filter-section h5 {
+.filterSection h5 {
     margin-bottom: 0.3rem;
     font-weight: 500;
 }
 
-.filter-section ul {
+.filterSection ul {
     list-style: none;
 }
 
-.filter-section li {
+.filterSection li {
     margin-bottom: 0.5rem;
     font-size: 0.9rem;
 }
 
-.filter-section input[type="checkbox"],
-.filter-section input[type="radio"] {
+.filterSection input[type="checkbox"],
+.filterSection input[type="radio"] {
     margin-right: 0.5rem;
 }
 
-.price-range {
+.priceRange {
     font-size: 0.9rem;
     color: #555;
     margin-bottom: 0.5rem;
     padding-left: 1rem;
 }
 
-.price-range input[type="range"] {
+.priceRange input[type="range"] {
     width: 100%;
 }
 
 .sortSection {
+    margin-right: 7rem;
     display: flex;
     justify-content: flex-end;
-    align-items: center;
-    margin-bottom: 1rem;
-    margin-right: 2rem;
+    padding: 0 1rem;
 }
 
 .sortSelect {
@@ -201,10 +220,9 @@
 }
 
 .cardWrapper {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 1rem;
+    margin: 0.15rem auto;
+    width: 90%;
+    max-width: 1200px;
 }
 
 .checkbox {
@@ -341,7 +359,7 @@
 }
 
 /* 더보기 */
-.load-more {
+.loadMore {
     display: block;
     width: 120px;
     margin: 2rem auto;
@@ -353,7 +371,7 @@
     cursor: pointer;
 }
 
-.load-more:hover {
+.loadMore:hover {
     background: #f0f0f0;
 }
 

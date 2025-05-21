@@ -28,6 +28,11 @@ const ListPage = () => {
   const [dateRange, setDateRange] = useState([null, null]);
   const [startDate, endDate] = dateRange;
   const [sortOption, setSortOption] = useState('rating'); // 기본값: 평점순
+  const [filters, setFilters] = useState({
+    services: [],
+    star: null,
+    price: 500000,
+  });
 
   const [userInfo, setUserInfo] = useState({
     name: '',
@@ -51,7 +56,8 @@ const ListPage = () => {
         paradise1,
         paradise2,
         paradise3,
-      ]
+      ],
+      facilities: ['호텔', '수영장', '조식제공', '주차시설']
     },
     {
       id: 2,
@@ -66,7 +72,8 @@ const ListPage = () => {
         signiel1,
         signiel2,
         signiel3,
-      ]
+      ],
+      facilities: ['호텔', '조식제공', '주차시설']
     },
     {
       id: 3,
@@ -81,7 +88,8 @@ const ListPage = () => {
         grand1,
         grand2,
         grand3,
-      ]
+      ],
+      facilities: ['호텔', '수영장', '주차시설']
     },
   ]);
 
@@ -96,7 +104,21 @@ const ListPage = () => {
     );
   };
 
-  const sortedHotels = [...hotels].sort((a, b) => {
+  const filteredHotels = [...hotels].filter(hotel => {
+    // 서비스 필터: 체크한 모든 서비스가 호텔의 facilities에 포함되어야 통과
+    const serviceMatch = filters.services.every(service =>
+      hotel.facilities.includes(service)
+    );
+
+    const starMatch = filters.star ? hotel.rating[0] === filters.star : true;
+
+    const price = parseInt(hotel.pricePerNight.replace(/[₩,]/g, ''));
+    const priceMatch = price <= filters.price;
+
+    return serviceMatch && starMatch && priceMatch;
+  });
+
+  const sortedHotels = [...filteredHotels].sort((a, b) => {
     if (sortOption === 'rating') {
       return parseFloat(b.rating) - parseFloat(a.rating);
     }
@@ -108,6 +130,16 @@ const ListPage = () => {
     }
     return 0;
   });
+
+  const handleServiceChange = (e) => {
+    const { value, checked } = e.target;
+    setFilters(prev => {
+      const updated = checked
+        ? [...prev.services, value]
+        : prev.services.filter(service => service !== value);
+      return { ...prev, services: updated };
+    });
+  };
 
   // 1) 마운트 시 사용자 정보 가져오기 백엔드추가
   useEffect(() => {
@@ -244,21 +276,21 @@ const ListPage = () => {
         {/* Sidebar */}
         <aside className={styles.sidebar}>
           <div className={styles.firstDivider}></div>
-          <div className={styles['filter-section']}>
+          <div className={styles.filterSection}>
             <h4>필터링</h4>
-            <div className={styles['filtering-title']}>
+            <div className={styles.filteringTitle}>
               <h5>서비스</h5>
               <ul>
-                <li><label><input type="checkbox" />호텔</label></li>
-                <li><label><input type="checkbox" />수영장</label></li>
-                <li><label><input type="checkbox" />조식제공</label></li>
-                <li><label><input type="checkbox" />주차시설</label></li>
+                <li><label><input type="checkbox" value="호텔" onChange={handleServiceChange} />호텔</label></li>
+                <li><label><input type="checkbox" value="수영장" onChange={handleServiceChange} />수영장</label></li>
+                <li><label><input type="checkbox" value="조식제공" onChange={handleServiceChange} />조식제공</label></li>
+                <li><label><input type="checkbox" value="주차시설" onChange={handleServiceChange} />주차시설</label></li>
               </ul>
             </div>
             <div className={styles.divider}></div>
           </div>
-          <div className={styles['filter-section']}>
-            <div className={styles['filtering-title']}>
+          <div className={styles.filterSection}>
+            <div className={styles.filteringTitle}>
               <h5>시설 등급</h5>
               <ul>
                 <li><label><input type="radio" name="star" />5성</label></li>
@@ -270,11 +302,13 @@ const ListPage = () => {
             </div>
           </div>
           <div className={styles.divider}></div>
-          <div className={styles['filter-section']}>
-            <div className={styles['filtering-title']}>
+          <div className={styles.filterSection}>
+            <div className={styles.filteringTitle}>
               <h5>가격 (1박당)</h5>
-              <input type="range" min="0" max="500000" step="10000" />
-              <div className={styles['price-range']}>₩0 ~ ₩500,000</div>
+              <input type="range" min="0" max="1000000" step="10000" value={filters.price}
+                onChange={(e) =>
+                  setFilters(prev => ({ ...prev, price: parseInt(e.target.value) }))} />
+              <div className={styles.priceRange}>₩0 ~ ₩{filters.price.toLocaleString()}</div>
             </div>
           </div>
         </aside>
@@ -294,6 +328,19 @@ const ListPage = () => {
               <option value="priceHigh">높은 가격순</option>
             </select>
           </div>
+
+          {sortedHotels.length > 0 ? (
+            sortedHotels.map(item => (
+              <div key={item.id} className={styles.cardWrapper}>
+                {/* 카드 내용 */}
+              </div>
+            ))
+          ) : (
+            <div className={styles.emptyBox}>
+              조건에 맞는 호텔이 없습니다.
+            </div>
+          )}
+
           {sortedHotels.map(item => (
             <div key={item.id} className={styles.cardWrapper}>
               <div className={styles.card}>
@@ -330,9 +377,9 @@ const ListPage = () => {
                   <div className={styles.cardMiddle}>
                     <p className={styles.location}>{item.location}</p>
                     <div className={styles.facilities}>
-                      <span>호텔</span>
-                      <span>수영장</span>
-                      <span>조식 제공</span>
+                      {item.facilities.map((f, i) => (
+                        <span key={i}>{f}</span>
+                      ))}
                     </div>
                   </div>
                   <div className={styles.cardBottom}>
@@ -347,7 +394,7 @@ const ListPage = () => {
               </div>
             </div>
           ))}
-          <button className={styles['load-more']}>더보기</button>
+          <button className={styles.loadMore}>더보기</button>
         </section>
       </div>
 
