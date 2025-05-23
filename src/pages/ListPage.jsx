@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { setUserInfo, updateUserInfo } from '../features/userSlice';
 import { setSortOption, setFilters, toggleService } from '../features/filterSlice';
 import { setDateRange } from '../features/reservationSlice';
 import styles from '../css/ListPage.module.css';
@@ -34,19 +35,10 @@ const ListPage = () => {
   const sortOption = useSelector(state => state.filter.sortOption);
   const filters = useSelector(state => state.filter.filters);
   const { dateRange } = useSelector(state => state.reservation);
+  const user = useSelector(state => state.user);
 
-  const startDate = dateRange[0];
-  const endDate = dateRange[1];
-  
+  const [startDate, endDate] = Array.isArray(dateRange) ? dateRange : [null, null];
   const navigate = useNavigate();
-
-  const [userInfo, setUserInfo] = useState({
-    name: '',
-    email: '',
-    loginID: '',
-    loginPassword: '',
-    punNumber: ''
-  });
 
   const [hotels, setHotels] = useState([
     {
@@ -144,31 +136,29 @@ const ListPage = () => {
       method: 'GET',
       credentials: 'include',
     })
-      .then(res => {
+      .then((res) => {
         if (!res.ok) throw new Error('세션 정보 불러오기 실패');
         return res.json();
       })
-      .then(data => {
-        console.log(data)
-        // 백엔드에서 반환하는 JSON 스키마에 맞춰서 매핑
-        setUserInfo({
-          name: data.name,
-          email: data.email,
-          loginID: data.loginID,
-          loginPassword: '',      // 보안을 위해 비밀번호는 빈 문자열로
-          punNumber: data.punNumber
-        });
+      .then((data) => {
+        dispatch(
+          setUserInfo({
+            username: data.name,
+            email: data.email,
+            loginID: data.loginID,
+            punNumber: data.punNumber,
+          })
+        );
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
-        // setIsAuthenticated(false);
       });
-  }, []);
+  }, [dispatch]);
 
   // 2) input 값 바뀔 때마다 상태 업데이트, 백엔드수정
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setUserInfo(prev => ({ ...prev, [name]: value }));
+    dispatch(updateUserInfo({ [name]: value }));
   };
 
   // 3) 수정하기 버튼 눌렀을 때 백엔드에 PUT, 백엔드 수정
@@ -177,13 +167,13 @@ const ListPage = () => {
 
     fetch('http://localhost:8080/api/userinfo', {
       method: 'PUT',
-      credentials: 'include',               // 세션 쿠키 포함
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: userInfo.name,
-        email: userInfo.email,
-        loginPassword: userInfo.loginPassword,  // 빈 문자열이면 백엔드에서 무시
-        punNumber: userInfo.punNumber
+        name: user.username,     // Redux에서 가져온 값
+        email: user.email,
+        loginPassword: '',       // 비밀번호 수정은 별도 처리 필요
+        punNumber: user.punNumber,
       })
     })
       .then(res => {
@@ -193,7 +183,7 @@ const ListPage = () => {
       .then(data => {
         if (data.status === 'success') {
           alert('회원정보가 수정되었습니다.');
-          // 필요하면 다시 최신 정보 GET 등 추가
+          // 필요하다면 Redux 상태 업데이트도 가능
         } else {
           alert('수정에 실패했습니다.');
         }
@@ -209,10 +199,9 @@ const ListPage = () => {
     try {
       await fetch('http://localhost:8080/logout', {
         method: 'POST',
-        credentials: 'include'
+        credentials: 'include',
       });
-      // setIsAuthenticated(false);
-      navigate('/');  // 로그아웃 후 홈으로
+      navigate('/');
     } catch (e) {
       console.error('로그아웃 실패', e);
     }
@@ -226,7 +215,7 @@ const ListPage = () => {
           <Link to="/">🔴 Stay Manager</Link>
         </div>
         <div className="navLinks">
-          <a>{userInfo.name}님</a>
+          <a>{user.username}님</a>
           <a href="/myPage">MyPage</a>
           <a href="/savedPage">찜 목록</a>
           <Link to="/"
