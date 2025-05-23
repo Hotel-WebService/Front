@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from "react-router-dom";
 import styles from '../css/LoginPage.module.css';
-import instargram from '../assets/instargram.jpg';
-import facebook from '../assets/facebook.jpg';
-import twitter from '../assets/twitter.jpg';
+import instargram from '../assets/icon/instargram.jpg';
+import facebook from '../assets/icon/facebook.jpg';
+import twitter from '../assets/icon/twitter.jpg';
 
 const LoginPage = () => {
   const [loginID, setLoginID] = useState('');

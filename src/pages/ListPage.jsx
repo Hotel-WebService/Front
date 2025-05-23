@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { setSortOption, setFilters, toggleService } from '../features/filterSlice';
+import { setDateRange } from '../features/reservationSlice';
 import styles from '../css/ListPage.module.css';
 import DatePicker from 'react-datepicker';
 import { ko } from 'date-fns/locale';
@@ -8,31 +11,34 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import { Navigation } from 'swiper/modules';
-import search from '../assets/search.jpg';
-import grand1 from '../assets/grand1.jpg';
-import grand2 from '../assets/grand2.jpg';
-import grand3 from '../assets/grand3.jpg';
-import paradise1 from '../assets/paradise1.jpg';
-import paradise2 from '../assets/paradise2.jpg';
-import paradise3 from '../assets/paradise3.jpg';
-import signiel1 from '../assets/signiel1.jpg';
-import signiel2 from '../assets/signiel2.jpg';
-import signiel3 from '../assets/signiel3.jpg';
-import instargram from '../assets/instargram.jpg';
-import facebook from '../assets/facebook.jpg';
-import twitter from '../assets/twitter.jpg';
+
+
+// 이미지
+import search from '../assets/icon/search.jpg';
+import grand1 from '../assets//hotel2/grand1.jpg';
+import grand2 from '../assets/hotel2/grand2.jpg';
+import grand3 from '../assets/hotel2/grand3.jpg';
+import paradise1 from '../assets/hotel1/paradise1.jpg';
+import paradise2 from '../assets/hotel1/paradise2.jpg';
+import paradise3 from '../assets/hotel1/paradise3.jpg';
+import signiel1 from '../assets/hotel3/signiel1.jpg';
+import signiel2 from '../assets/hotel3/signiel2.jpg';
+import signiel3 from '../assets/hotel3/signiel3.jpg';
+import instargram from '../assets/icon/instargram.jpg';
+import facebook from '../assets/icon/facebook.jpg';
+import twitter from '../assets/icon/twitter.jpg';
 
 
 const ListPage = () => {
+  const dispatch = useDispatch();
+  const sortOption = useSelector(state => state.filter.sortOption);
+  const filters = useSelector(state => state.filter.filters);
+  const { dateRange } = useSelector(state => state.reservation);
 
-  const [dateRange, setDateRange] = useState([null, null]);
-  const [startDate, endDate] = dateRange;
-  const [sortOption, setSortOption] = useState('rating'); // 기본값: 평점순
-  const [filters, setFilters] = useState({
-    services: [],
-    star: null,
-    price: 500000,
-  });
+  const startDate = dateRange[0];
+  const endDate = dateRange[1];
+  
+  const navigate = useNavigate();
 
   const [userInfo, setUserInfo] = useState({
     name: '',
@@ -93,9 +99,6 @@ const ListPage = () => {
     },
   ]);
 
-  const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-
   const toggleLike = (id) => {
     setHotels(prev =>
       prev.map(item =>
@@ -132,13 +135,7 @@ const ListPage = () => {
   });
 
   const handleServiceChange = (e) => {
-    const { value, checked } = e.target;
-    setFilters(prev => {
-      const updated = checked
-        ? [...prev.services, value]
-        : prev.services.filter(service => service !== value);
-      return { ...prev, services: updated };
-    });
+    dispatch(toggleService(e.target.value));
   };
 
   // 1) 마운트 시 사용자 정보 가져오기 백엔드추가
@@ -164,7 +161,7 @@ const ListPage = () => {
       })
       .catch(err => {
         console.error(err);
-        setIsAuthenticated(false);
+        // setIsAuthenticated(false);
       });
   }, []);
 
@@ -214,7 +211,7 @@ const ListPage = () => {
         method: 'POST',
         credentials: 'include'
       });
-      setIsAuthenticated(false);
+      // setIsAuthenticated(false);
       navigate('/');  // 로그아웃 후 홈으로
     } catch (e) {
       console.error('로그아웃 실패', e);
@@ -251,7 +248,7 @@ const ListPage = () => {
           selectsRange
           startDate={startDate}
           endDate={endDate}
-          onChange={(update) => setDateRange(update)}
+          onChange={(update) => dispatch(setDateRange(update))}
           isClearable={false}
           placeholderText="날짜 선택"
           dateFormat="yyyy/MM/dd"
@@ -307,7 +304,9 @@ const ListPage = () => {
               <h5>가격 (1박당)</h5>
               <input type="range" min="0" max="1000000" step="10000" value={filters.price}
                 onChange={(e) =>
-                  setFilters(prev => ({ ...prev, price: parseInt(e.target.value) }))} />
+                  dispatch(setFilters({ price: parseInt(e.target.value) }))
+                }
+              />
               <div className={styles.priceRange}>₩0 ~ ₩{filters.price.toLocaleString()}</div>
             </div>
           </div>
@@ -320,7 +319,7 @@ const ListPage = () => {
             <select
               id="sort"
               value={sortOption}
-              onChange={(e) => setSortOption(e.target.value)}
+              onChange={(e) => dispatch(setSortOption(e.target.value))}
               className={styles.sortSelect}
             >
               <option value="rating">평점순</option>

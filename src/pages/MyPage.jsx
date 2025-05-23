@@ -4,9 +4,9 @@ import styles from '../css/MyPage.module.css';
 import Modal from 'react-modal';
 import html2canvas from 'html2canvas';
 import h1 from '../assets/h1.jpg';
-import instargram from '../assets/instargram.jpg';
-import facebook from '../assets/facebook.jpg';
-import twitter from '../assets/twitter.jpg';
+import instargram from '../assets/icon/instargram.jpg';
+import facebook from '../assets/icon/facebook.jpg';
+import twitter from '../assets/icon/twitter.jpg';
 import { useNavigate } from "react-router-dom";
 
 const MyPage = () => {

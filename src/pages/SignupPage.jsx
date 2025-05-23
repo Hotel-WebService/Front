@@ -4,9 +4,9 @@ import styles from '../css/SignupPage.module.css';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { ko } from 'date-fns/locale';
-import instargram from '../assets/instargram.jpg';
-import facebook from '../assets/facebook.jpg';
-import twitter from '../assets/twitter.jpg';
+import instargram from '../assets/icon/instargram.jpg';
+import facebook from '../assets/icon/facebook.jpg';
+import twitter from '../assets/icon/twitter.jpg';
 
 const SignupPage = () => {
     const [formData, setFormData] = useState({

@@ -8,34 +8,35 @@ import 'swiper/css/navigation';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { ko } from 'date-fns/locale';
 import styles from '../css/FirstPage.module.css';
-import heroImage from '../assets/firstPage1.jpg';
-import r1 from '../assets/r1.jpg';
-import r2 from '../assets/r2.jpg';
-import r3 from '../assets/r3.jpg';
-import rc1 from '../assets/rc1.jpg';
-import rc2 from '../assets/rc2.jpg';
-import rc3 from '../assets/rc3.jpg';
-import event1 from '../assets/event1.jpg';
-import event2 from '../assets/event2.jpg';
-import event3 from '../assets/event3.jpg';
-import event4 from '../assets/event4.jpg';
-import instargram from '../assets/instargram.jpg';
-import facebook from '../assets/facebook.jpg';
-import twitter from '../assets/twitter.jpg';
 import { useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from 'react-redux';
+import { setLogin, setLogout } from '../features/userSlice';
+import { setLocation, setCheckin, setCheckout, setGuests } from '../features/reservationSlice';
+
+// 이미지
+import heroImage from '../assets/firstPage/firstPage.jpg';
+import r1 from '../assets/firstPage/r1.jpg';
+import r2 from '../assets/firstPage/r2.jpg';
+import r3 from '../assets/firstPage/r3.jpg';
+import rc1 from '../assets/firstPage/rc1.jpg';
+import rc2 from '../assets/firstPage/rc2.jpg';
+import rc3 from '../assets/firstPage/rc3.jpg';
+import event1 from '../assets/event/event1.jpg';
+import event2 from '../assets/event/event2.jpg';
+import event3 from '../assets/event/event3.jpg';
+import event4 from '../assets/event/event4.jpg';
+import instargram from '../assets/icon/instargram.jpg';
+import facebook from '../assets/icon/facebook.jpg';
+import twitter from '../assets/icon/twitter.jpg';
 
 const FirstPage = () => {
+  const dispatch = useDispatch();
+  const { isAuthenticated, username } = useSelector((state) => state.user);
+  const { location, checkin, checkout, guests } = useSelector((state) => state.reservation);
+
   const mapRef = useRef(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [username, setUsername] = useState('');
   const navigate = useNavigate(); // 백엔드 추가
   const [hotel, setHotel] = useState(null); // 백엔드 호텔 정보 추가
-
-  // 예약 관련 상태
-  const [location, setLocation] = useState('');
-  const [checkin, setCheckin] = useState(null);
-  const [checkout, setCheckout] = useState(null);
-  const [guests, setGuests] = useState(1);
 
   // 백엔드 로그인, 로그아웃 추가
   useEffect(() => {
@@ -47,19 +48,25 @@ const FirstPage = () => {
         return res.json();
       })
       .then(data => {
-        // boolean 혹은 string 모두 커버
         const auth = data.authenticated === true || data.authenticated === 'true';
-        setIsAuthenticated(auth);
-
-        // name 필드가 있으면 그걸, 없으면 username
-        const user = data.name || data.username || '';
-        setUsername(user);
+        if (auth) dispatch(setLogin(data.name || data.username || ''));
+        else dispatch(setLogout());
       })
-      .catch(() => {
-        setIsAuthenticated(false);
-        setUsername('');
-      });
+      .catch(() => dispatch(setLogout()));
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('http://localhost:8080/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      dispatch(setLogout());
+      navigate('/');
+    } catch (e) {
+      console.error('로그아웃 실패', e);
+    }
+  };
 
   // --- 2) 카카오 스크립트 한 번만 로드 ---
   useEffect(() => {
@@ -114,20 +121,6 @@ const FirstPage = () => {
     });
   };
 
-
-  const handleLogout = async () => {
-    try {
-      await fetch('http://localhost:8080/logout', {
-        method: 'POST',
-        credentials: 'include'
-      });
-      setIsAuthenticated(false);
-      navigate('/');  // 로그아웃 후 홈으로
-    } catch (e) {
-      console.error('로그아웃 실패', e);
-    }
-  };
-
   return (
     <div>
       {/* 1) 지도 섹션 백엔드 테스트용추가*/}
@@ -178,7 +171,7 @@ const FirstPage = () => {
               type="text"
               id="location"
               value={location}
-              onChange={(e) => setLocation(e.target.value)}
+              onChange={(e) => dispatch(setLocation(e.target.value))}
             />
           </div>
 
@@ -187,7 +180,7 @@ const FirstPage = () => {
               <label>체크인</label>
               <DatePicker
                 selected={checkin}
-                onChange={(date) => setCheckin(date)}
+                onChange={(date) => dispatch(setCheckin(date))}
                 placeholderText="날짜 선택"
                 dateFormat="yyyy/MM/dd"
                 popperPlacement="bottom-start"
@@ -199,7 +192,7 @@ const FirstPage = () => {
               <label>체크아웃</label>
               <DatePicker
                 selected={checkout}
-                onChange={(date) => setCheckout(date)}
+                onChange={(date) => dispatch(setCheckout(date))}
                 placeholderText="날짜 선택"
                 dateFormat="yyyy/MM/dd"
                 popperPlacement="bottom-start"
@@ -215,7 +208,7 @@ const FirstPage = () => {
               type="number"
               id="guests"
               value={guests}
-              onChange={(e) => setGuests(e.target.value)}
+              onChange={(e) => dispatch(setGuests(e.target.value))}
               min="1"
             />
           </div>

@@ -5,18 +5,18 @@ import { ko } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import Modal from 'react-modal';
 import styles from '../css/ReservationPage.module.css';
-import instargram from '../assets/instargram.jpg';
-import facebook from '../assets/facebook.jpg';
-import twitter from '../assets/twitter.jpg';
-import search from '../assets/search.jpg';
-import paradise1 from '../assets/paradise1.jpg';
-import paradise2 from '../assets/paradise2.jpg';
-import paradise3 from '../assets/paradise3.jpg';
-import paradise4 from '../assets/paradise4.jpg';
-import paradise5 from '../assets/paradise5.jpg';
-import paradiseRoom1 from '../assets/paradiseRoom1.jpg';
-import paradiseRoom2 from '../assets/paradiseRoom2.jpg';
-import paradiseRoom3 from '../assets/paradiseRoom3.jpg';
+import instargram from '../assets/icon/instargram.jpg';
+import facebook from '../assets/icon/facebook.jpg';
+import twitter from '../assets/icon/twitter.jpg';
+import search from '../assets/icon/search.jpg';
+import paradise1 from '../assets/hotel1/paradise1.jpg';
+import paradise2 from '../assets/hotel1/paradise2.jpg';
+import paradise3 from '../assets/hotel1/paradise3.jpg';
+import paradise4 from '../assets/hotel1/paradise4.jpg';
+import paradise5 from '../assets/hotel1/paradise5.jpg';
+import paradiseRoom1 from '../assets/hotel1/paradiseRoom1.jpg';
+import paradiseRoom2 from '../assets/hotel1/paradiseRoom2.jpg';
+import paradiseRoom3 from '../assets/hotel1/paradiseRoom3.jpg';
 
 
 const ReservationPage = () => {

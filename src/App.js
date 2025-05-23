@@ -1,5 +1,6 @@
+import { Provider } from 'react-redux';
+import { store } from './app/store';
 import { Routes, Route } from 'react-router-dom';
-import { UserProvider } from './context/UserContext';
 import FirstPage from './pages/FirstPage';
 import LoginPage from './pages/LoginPage';
 import MyPage from './pages/MyPage';
@@ -11,7 +12,7 @@ import HotelList from './pages/HotelList';
 
 function App() {
   return (
-    <UserProvider>
+    <Provider store={store}>
       <Routes>
         <Route path="/" element={<FirstPage />} />
         <Route path="/login" element={<LoginPage />} />
@@ -22,7 +23,7 @@ function App() {
         <Route path="/signupPage" element={<SignupPage />} />
         <Route path="/hotelList" element={<HotelList />} />
       </Routes>
-    </UserProvider>
+    </Provider>
   );
 }
 
