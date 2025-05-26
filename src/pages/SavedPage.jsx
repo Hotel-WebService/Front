@@ -26,7 +26,6 @@ const SavedPage = () => {
     const user = useSelector(state => state.user);
     const dispatch = useDispatch();
     const likedHotels = useSelector(state => state.likedHotels);
-    const [savedHotels, setSavedHotels] = useState([]);
 
     useEffect(() => {
         if (!user.username) {
@@ -45,27 +44,11 @@ const SavedPage = () => {
                         loginID: data.loginID,
                         punNumber: data.punNumber,
                     }));
+                    console.log('[🔍 SavedPage에서의 likedHotels]', likedHotels);
                 })
                 .catch(err => console.error('유저 정보 로딩 실패:', err));
         }
     }, [dispatch, user.username]);
-
-    useEffect(() => {
-        const fetchLikes = async () => {
-            try {
-                const res = await fetch(`http://localhost:8080/api/likes`, {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-                const data = await res.json();
-                setSavedHotels(data);  // 서버에서 hotel 정보 전체 내려준다는 가정
-            } catch (err) {
-                console.error('찜 목록 불러오기 실패:', err);
-            }
-        };
-
-        fetchLikes();
-    }, []);
 
     return (
         <div className={styles.body}>
@@ -127,7 +110,7 @@ const SavedPage = () => {
                                     <div className={styles.cardMiddle}>
                                         <p className={styles.location}>{item.location}</p>
                                         <div className={styles.facilities}>
-                                            {item.facilities?.map((f, i) => (
+                                            {item.facilities.map((f, i) => (
                                                 <span key={i}>{f}</span>
                                             ))}
                                         </div>

@@ -28,23 +28,31 @@ import courtyardRoom3 from '../assets/hotel2/courtyardRoom3.jpg';
 
 const ReservationPage = () => {
 
-    const user = useSelector(state => state.user); // 추가
+    const user = useSelector(state => state.user);
     const search = useSelector(state => state.search);
     const dispatch = useDispatch();
     const { destination, startDate, endDate, people } = useSelector(state => state.search);
     const [dateRange, setDateRange] = useState([null, null]);
     const [activeTab, setActiveTab] = useState(null);
     const [showAllReviews, setShowAllReviews] = useState(false);
-    const [hotel, setHotel] = useState(null); // 백엔드 호텔 정보 추가
-    const { id } = useParams();               // 백엔드 호텔 정보 추가
+    const [hotel, setHotel] = useState(null);
+    const { id } = useParams();
     console.log("받은 hotel id:", id);
-    const [rhotel, rsetHotel] = useState(null); // 백엔드 호텔 정보 추가
-    const [rrooms, rsetRooms] = useState([]); // 백엔드 호텔 정보 추가
+    const [rhotel, rsetHotel] = useState(null);
+    const [rrooms, rsetRooms] = useState([]);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
     const [selectedRoom, setSelectedRoom] = useState(null);
     const [guestName, setGuestName] = useState("");
     const [guestEmail, setGuestEmail] = useState("");
     const [guestPhone, setGuestPhone] = useState("");
+
+    const [selectedPG, setSelectedPG] = useState("kakaopay.TC0ONETIME"); // 결제 초기값, 백엔드추가
+    // 결제사(PG) 코드 목록
+    const PG_CODES = [
+        { label: "카카오페이", value: "kakaopay.TC0ONETIME" }, // 테스트용 코드
+        { label: "헥토파이낸셜(신용카드)", value: "settle.portone1" },
+        // 필요시 다른 결제사도 추가 가능
+    ];
 
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     Modal.setAppElement('#root');
@@ -209,14 +217,47 @@ const ReservationPage = () => {
     };
 
     const handlePayment = () => {
-        console.log("예약 정보 전송:", {
-            room: selectedRoom,
-            name: guestName,
-            email: guestEmail,
-            phone: guestPhone,
-        });
-        alert("결제가 완료되었습니다!");
-        closeBookingModal();
+        if (!window.IMP) {
+            alert("결제 모듈이 로드되지 않았습니다.");
+            return;
+        }
+        window.IMP.init("imp83146667"); // 자신의 가맹점 식별코드로 변경
+
+        window.IMP.request_pay(
+            {
+                pg: selectedPG, // 결제 PG사 (테스트는 'kcp.T0000' 등 가능)
+                //      pg: "html5_inicis",
+                pay_method: "card", // 결제수단
+                merchant_uid: "mid_" + new Date().getTime(), // 주문번호
+                name: "호텔 결제",
+                amount: 100, // 결제금액 (테스트용)
+                buyer_email: guestEmail,
+                buyer_name: guestName,
+                buyer_tel: guestPhone,
+            },
+            function (rsp) {
+                // rsp.success: true/false
+                if (rsp.success) {
+                    // **결제 성공 후 백엔드에 검증 요청**
+                    fetch("http://localhost:8080/api/pay/verify", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ imp_uid: rsp.imp_uid }),
+                    })
+                        .then((res) => res.json())
+                        .then((data) => {
+                            alert("결제 성공 및 검증 완료");
+                            // data로 추가 처리 가능
+                            closeBookingModal();
+                        })
+                        .catch(() => {
+                            alert("결제 검증 실패");
+                        });
+                } else {
+                    alert("결제가 취소되었거나 실패했습니다.");
+                }
+            }
+        );
     };
 
     useEffect(() => {
@@ -624,6 +665,21 @@ const ReservationPage = () => {
                         onChange={(e) => setGuestPhone(e.target.value)}
                         className={styles.inputField}
                     />
+                    {/* 결제사 선택 */}
+                    <div className={styles.pgSelectBox}>
+                        <label>결제수단: </label>
+                        <select
+                            value={selectedPG}
+                            onChange={e => setSelectedPG(e.target.value)}
+                            className={styles.pgSelect}
+                        >
+                            {PG_CODES.map(pg => (
+                                <option key={pg.value} value={pg.value}>
+                                    {pg.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                     <button className={styles.paymentBtn} onClick={handlePayment}>결제하기</button>
                     <button className={styles.closeBtn} onClick={closeBookingModal}>닫기</button>
                 </div>

@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { setUserInfo, updateUserInfo } from '../features/userSlice';
 import { setSortOption, setFilters, toggleService } from '../features/filterSlice';
 import { setDestination, setDates, setPeople } from '../features/searchSlice';
-import { toggleLike as toggleLikeAction } from '../features/likedHotelsSlice';
+import { toggleLike } from '../features/likedHotelsSlice';
 import styles from '../css/ListPage.module.css';
 import DatePicker from 'react-datepicker';
 import { ko } from 'date-fns/locale';
@@ -37,7 +37,6 @@ const ListPage = () => {
   const sortOption = useSelector(state => state.filter.sortOption);
   const filters = useSelector(state => state.filter.filters);
   const likedHotels = useSelector(state => state.likedHotels);
-  const [likedHotelIds, setLikedHotelIds] = useState([]);
   const [allReviews, setAllReviews] = useState([]);
   const [searchTriggeredDestination, setSearchTriggeredDestination] = useState(null);
 
@@ -84,6 +83,10 @@ const ListPage = () => {
       .then(setAllReviews)
       .catch(console.error);
   }, []);
+
+  useEffect(() => {
+    console.log('📌 likedHotels Redux 상태:', likedHotels);
+  }, [likedHotels]);
 
   const mappedHotels = hotelsinfo.map(hotel => {
     // 해당 호텔의 리뷰만 필터링
@@ -159,36 +162,6 @@ const ListPage = () => {
 
   const handleServiceChange = (e) => {
     dispatch(toggleService(e.target.value));
-  };
-
-  const handleLike = async (hotel) => {
-    try {
-      const res = await fetch(`http://localhost:8080/api/likes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ hotelId: hotel.id })
-      });
-      if (res.ok) {
-        setLikedHotelIds(prev => [...prev, hotel.id]);
-      }
-    } catch (err) {
-      console.error('찜 추가 실패:', err);
-    }
-  };
-
-  const handleUnlike = async (hotelId) => {
-    try {
-      const res = await fetch(`http://localhost:8080/api/likes/${hotelId}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-      if (res.ok) {
-        setLikedHotelIds(prev => prev.filter(id => id !== hotelId));
-      }
-    } catch (err) {
-      console.error('찜 해제 실패:', err);
-    }
   };
 
   const handleSearchClick = () => {
@@ -427,8 +400,8 @@ const ListPage = () => {
                           className={styles.btnSchedule}
                           style={{ backgroundColor: isLiked ? '#40c9c9' : '#ccc' }}
                           onClick={(e) => {
-                            e.preventDefault(); // 페이지 이동 막기
-                            handleLike(item);  // Redux 상태 업데이트
+                            e.preventDefault();
+                            dispatch(toggleLike(item)); // ✅ Redux에 찜 상태 저장
                           }}
                         >
                           {isLiked ? '찜해제' : '찜하기'}
