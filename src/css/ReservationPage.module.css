@@ -53,12 +53,9 @@
 }
 
 .searchBox button img {
-    border: none;
     width: 27px;
     height: 27px;
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center center;
+    object-fit: contain;
 }
 
 .datePickerWrapper {
@@ -299,7 +296,7 @@
     border-radius: 12px;
     overflow: hidden;
     width: 400px;
-    height: 37  0px;
+    height: 37 0px;
     font-size: 14px;
     color: #333;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
@@ -589,53 +586,116 @@
 }
 
 .mapSection {
-  text-align: center;
+    text-align: center;
 }
 
 .mapContainer {
-  width: 100%;
-  height: 300px;
-  border: 1px solid #ddd;
-  
-  overflow: hidden;
+    width: 100%;
+    height: 300px;
+    border: 1px solid #ddd;
+
+    overflow: hidden;
 }
 
 .modal {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  max-height: 90vh;
-  overflow-y: auto;
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    max-height: 90vh;
+    overflow-y: auto;
+    width: 700px;
 }
 
 .overlay {
-  background-color: rgba(0, 0, 0, 0.6);
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+    background-color: rgba(0, 0, 0, 0.6);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
 }
 
 .galleryGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  gap: 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 1rem;
 }
 
 .galleryImg {
-  width: 100%;
-  height: auto;
-  border-radius: 8px;
-  object-fit: cover;
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    object-fit: cover;
 }
 
 .closeBtn {
-  margin-top: 1rem;
-  padding: 0.6rem 1.2rem;
-  background-color: #ccc;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
+    margin-top: 1rem;
+    padding: 0.6rem 1.2rem;
+    background-color: #ccc;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.bookingImage {
+    margin-left: -1rem;
+    margin-right: -1rem;
+    margin-top: -1rem;
+    margin-bottom: 1rem;
+    width: calc(100% + 2rem);
+    /* 패딩 없앤 영역까지 채우기 */
+    height: 300px;
+    background-size: cover;
+    background-position: center;
+}
+
+.bookingRoomInfo {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: #f8f8f8;
+    overflow: hidden;
+    position: relative;
+}
+
+.bookingRoomInfo .roomName {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    margin-left: 0.5rem;
+}
+
+.bookingForm {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 1rem;
+}
+
+.inputField {
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+.paymentBtn {
+    background-color: #ff5c5c;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.2s ease;
+}
+
+.paymentBtn:hover {
+    background-color: #660000ae;
 }

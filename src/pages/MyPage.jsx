@@ -1,8 +1,12 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { setUserInfo } from '../features/userSlice'; // 경로는 프로젝트 구조에 따라
 import styles from '../css/MyPage.module.css';
 import Modal from 'react-modal';
 import html2canvas from 'html2canvas';
+
+// 이미지
 import h1 from '../assets/h1.jpg';
 import instargram from '../assets/icon/instargram.jpg';
 import facebook from '../assets/icon/facebook.jpg';
@@ -10,13 +14,23 @@ import twitter from '../assets/icon/twitter.jpg';
 import { useNavigate } from "react-router-dom";
 
 const MyPage = () => {
-  const [userInfo, setUserInfo] = useState({
-    name: '',
+  const dispatch = useDispatch();
+  const user = useSelector(state => state.user);
+  const [editableUser, setEditableUser] = useState({
+    username: '',
     email: '',
-    loginID: '',
     loginPassword: '',
     punNumber: ''
   });
+
+  useEffect(() => {
+    setEditableUser({
+      username: user.username,
+      email: user.email,
+      loginPassword: '',
+      punNumber: user.punNumber
+    });
+  }, [user]);
 
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
@@ -25,10 +39,9 @@ const MyPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const navigate = useNavigate();
   const reservationRef = useRef(null);
+  const [isPasswordEditing, setIsPasswordEditing] = useState(false);
 
   const closeShareModal = () => setIsShareModalOpen(false);
-
-  const [isPasswordEditing, setIsPasswordEditing] = useState(false);
 
   // 모달 캡쳐 복사 기능
   const handleCaptureAndCopy = async () => {
@@ -89,26 +102,23 @@ const MyPage = () => {
         return res.json();
       })
       .then(data => {
-        console.log(data)
-        // 백엔드에서 반환하는 JSON 스키마에 맞춰서 매핑
-        setUserInfo({
-          name: data.name,
+        dispatch(setUserInfo({
+          username: data.name,
           email: data.email,
           loginID: data.loginID,
-          loginPassword: '',      // 보안을 위해 비밀번호는 빈 문자열로
-          punNumber: data.punNumber
-        });
+          punNumber: data.punNumber,
+        }));
       })
       .catch(err => {
         console.error(err);
         setIsAuthenticated(false);
       });
-  }, []);
+  }, [dispatch]);
 
   // 2) input 값 바뀔 때마다 상태 업데이트, 백엔드수정
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setUserInfo(prev => ({ ...prev, [name]: value }));
+    setEditableUser(prev => ({ ...prev, [name]: value }));
   };
 
   // 3) 수정하기 버튼 눌렀을 때 백엔드에 PUT, 백엔드 수정
@@ -117,30 +127,23 @@ const MyPage = () => {
 
     fetch('http://localhost:8080/api/userinfo', {
       method: 'PUT',
-      credentials: 'include',               // 세션 쿠키 포함
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: userInfo.name,
-        email: userInfo.email,
-        loginPassword: userInfo.loginPassword,  // 빈 문자열이면 백엔드에서 무시
-        punNumber: userInfo.punNumber
+        name: editableUser.username,
+        email: editableUser.email,
+        loginPassword: editableUser.loginPassword,
+        punNumber: editableUser.punNumber,
       })
     })
-      .then(res => {
-        if (!res.ok) throw new Error('정보 수정 실패');
-        return res.json();
-      })
+      .then(res => res.json())
       .then(data => {
         if (data.status === 'success') {
           alert('회원정보가 수정되었습니다.');
-          // 필요하면 다시 최신 정보 GET 등 추가
+          dispatch(setUserInfo(editableUser)); // 최신값으로 다시 Redux에 반영
         } else {
           alert('수정에 실패했습니다.');
         }
-      })
-      .catch(err => {
-        console.error(err);
-        alert('수정 중 오류가 발생했습니다.');
       });
   };
 
@@ -166,7 +169,7 @@ const MyPage = () => {
           <Link to="/">🔴 Stay Manager</Link>
         </div>
         <div className="navLinks">
-          <a>{userInfo.name}님</a>
+          <a>{user.username}님</a>
           <a href="/myPage">MyPage</a>
           <a href="/savedPage">찜 목록</a>
           <Link to="/"
@@ -180,7 +183,7 @@ const MyPage = () => {
       <section className={styles.welcome}>
         <h1 className={styles.h1}>MyPage</h1>
         <div className={styles.hello}>
-          <h4 className={styles.h4}>{userInfo.name}님, 환영합니다.</h4>
+          <h4 className={styles.h4}>{user.username}님, 환영합니다.</h4>
         </div>
       </section>
 
@@ -222,19 +225,19 @@ const MyPage = () => {
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.halfGroup}>
           <label>이름
-            <input type="text" name="name" value={userInfo.name} onChange={handleChange} />
+            <input type="text" name="name" value={editableUser.username} onChange={handleChange} />
           </label>
         </div>
 
         <div className={styles.halfGroup}>
           <label>이메일
-            <input type="email" name="email" value={userInfo.email} onChange={handleChange} className="full-width" />
+            <input type="email" name="email" value={editableUser.email} onChange={handleChange} className="full-width" />
           </label>
         </div>
 
         <div className={styles.halfGroup}>
           <label>아이디
-            <input type="text" name="loginID" value={userInfo.loginID} onChange={handleChange} className="full-width" />
+            <input type="text" name="loginID" value={user.loginID} onChange={handleChange} className="full-width" />
           </label>
         </div>
 
@@ -244,7 +247,7 @@ const MyPage = () => {
               <input
                 type="password"
                 name="loginPassword"
-                value={userInfo.loginPassword}
+                value={editableUser.loginPassword}
                 onChange={handleChange}
                 className="full-width"
               />
@@ -262,7 +265,7 @@ const MyPage = () => {
 
         <div className={styles.halfGroup}>
           <label>전화번호
-            <input type="text" name="punNumber" value={userInfo.punNumber} onChange={handleChange} className="full-width" />
+            <input type="text" name="punNumber" value={editableUser.punNumber} onChange={handleChange} className="full-width" />
           </label>
         </div>
 

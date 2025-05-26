@@ -2,11 +2,15 @@ import { configureStore } from '@reduxjs/toolkit';
 import userReducer from '../features/userSlice';
 import reservationReducer from '../features/reservationSlice';
 import filterReducer from '../features/filterSlice';
+import searchReducer from '../features/searchSlice';
+import likedHotelsReducer from '../features/likedHotelsSlice';
 
 export const store = configureStore({
   reducer: {
     user: userReducer,
     reservation: reservationReducer,
     filter: filterReducer,
+    search: searchReducer,
+    likedHotels: likedHotelsReducer,
   },
 });

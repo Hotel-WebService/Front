@@ -242,6 +242,11 @@
     width: 60rem;
 }
 
+.cardLink {
+    text-decoration: none;
+    color:#000000;
+}
+
 .imageGroup {
     width: 400px;
     height: 240px;

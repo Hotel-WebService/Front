@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { setUserInfo } from '../features/userSlice';
 import styles from '../css/LoginPage.module.css';
+
+// 이미지
 import instargram from '../assets/icon/instargram.jpg';
 import facebook from '../assets/icon/facebook.jpg';
 import twitter from '../assets/icon/twitter.jpg';
@@ -11,14 +14,12 @@ const LoginPage = () => {
   const [loginPassword, setLoginPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    // console.log('로그인 시도:', { loginID, loginPassword });
-    // 여기에 로그인 API 연동 가능
 
-    // spring-security 기본 form-login 처리에 맞춘 URLSearchParams
     const formData = new URLSearchParams();
     formData.append('loginID', loginID);
     formData.append('loginPassword', loginPassword);
@@ -27,25 +28,43 @@ const LoginPage = () => {
       const res = await fetch('http://localhost:8080/login', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: formData.toString(),
-        credentials: 'include'     // ✅ 세션 쿠키 주고받기
-
+        credentials: 'include',
       });
 
       if (res.ok) {
-        navigate('/');   // 로그인 성공 시
+        // 로그인 성공 후 사용자 정보 요청
+        const userRes = await fetch('http://localhost:8080/api/userinfo', {
+          method: 'GET',
+          credentials: 'include',
+        });
 
+        if (!userRes.ok) throw new Error('사용자 정보 조회 실패');
+
+        const userData = await userRes.json();
+
+        dispatch(
+          setUserInfo({
+            username: userData.name,
+            email: userData.email,
+            loginID: userData.loginID,
+            punNumber: userData.punNumber,
+          })
+        );
+
+        navigate('/'); // 홈으로 이동
       } else {
         setError('아이디/비밀번호가 맞지 않습니다.');
       }
     } catch (err) {
+      console.error(err);
       setError('로그인 중 오류가 발생했습니다.');
     }
   };
 
-  return (
+  return (  
     <div>
       {/* Header */}
       <header className="header">

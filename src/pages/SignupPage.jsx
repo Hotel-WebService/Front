@@ -4,6 +4,8 @@ import styles from '../css/SignupPage.module.css';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { ko } from 'date-fns/locale';
+
+// 이미지
 import instargram from '../assets/icon/instargram.jpg';
 import facebook from '../assets/icon/facebook.jpg';
 import twitter from '../assets/icon/twitter.jpg';
@@ -60,6 +62,24 @@ const SignupPage = () => {
 
         if (name === 'passwordConfirm') {
             setPwMatch(formData.loginPassword === value);
+        }
+        if (name === 'punNumber') {
+            const onlyNums = value.replace(/\D/g, ''); // 숫자만 추출
+            let formatted = '';
+
+            if (onlyNums.length < 4) {
+                formatted = onlyNums;
+            } else if (onlyNums.length < 7) {
+                formatted = `${onlyNums.slice(0, 3)}-${onlyNums.slice(3)}`;
+            } else if (onlyNums.length < 11) {
+                formatted = `${onlyNums.slice(0, 3)}-${onlyNums.slice(3, 6)}-${onlyNums.slice(6)}`;
+            } else {
+                formatted = `${onlyNums.slice(0, 3)}-${onlyNums.slice(3, 7)}-${onlyNums.slice(7, 11)}`;
+            }
+
+            setFormData(prev => ({ ...prev, [name]: formatted }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
         }
     };
 
@@ -249,7 +269,7 @@ const SignupPage = () => {
                         <input
                             type="text"
                             name="punNumber"
-                            placeholder="휴대폰 번호 입력 ('-' 제외)"
+                            placeholder="휴대폰 번호 입력"
                             value={formData.punNumber}
                             onChange={handleChange}
                             required

@@ -11,6 +11,7 @@ import styles from '../css/FirstPage.module.css';
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from 'react-redux';
 import { setLogin, setLogout } from '../features/userSlice';
+import { setDestination, setDates, setPeople } from '../features/searchSlice';
 import { setLocation, setCheckin, setCheckout, setGuests } from '../features/reservationSlice';
 
 // 이미지
@@ -30,6 +31,7 @@ import facebook from '../assets/icon/facebook.jpg';
 import twitter from '../assets/icon/twitter.jpg';
 
 const FirstPage = () => {
+  const search = useSelector(state => state.search);
   const dispatch = useDispatch();
   const { isAuthenticated, username } = useSelector((state) => state.user);
   const { location, checkin, checkout, guests } = useSelector((state) => state.reservation);
@@ -208,13 +210,22 @@ const FirstPage = () => {
               type="number"
               id="guests"
               value={guests}
-              onChange={(e) => dispatch(setGuests(e.target.value))}
+              onChange={(e) => dispatch(setGuests(Number(e.target.value)))}
               min="1"
             />
           </div>
 
           <Link to="/listPage">
-            <button className={styles.searchBtn}>검색</button>
+            <button
+              className={styles.searchBtn}
+              onClick={() => {
+                dispatch(setDestination(location));
+                dispatch(setDates({ startDate: checkin, endDate: checkout }));
+                dispatch(setPeople(guests));
+              }}
+            >
+              검색
+            </button>
           </Link>
         </div>
       </section>

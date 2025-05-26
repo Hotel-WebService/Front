@@ -1,14 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { setDestination, setDates, setPeople } from '../features/searchSlice';
 import DatePicker from 'react-datepicker';
 import { ko } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import Modal from 'react-modal';
 import styles from '../css/ReservationPage.module.css';
+import { useParams } from 'react-router-dom';
+import axios from 'axios';
+import { setUserInfo } from '../features/userSlice';
+
+// 이미지
 import instargram from '../assets/icon/instargram.jpg';
 import facebook from '../assets/icon/facebook.jpg';
 import twitter from '../assets/icon/twitter.jpg';
-import search from '../assets/icon/search.jpg';
+import searchIcon from '../assets/icon/search.jpg';
 import paradise1 from '../assets/hotel1/paradise1.jpg';
 import paradise2 from '../assets/hotel1/paradise2.jpg';
 import paradise3 from '../assets/hotel1/paradise3.jpg';
@@ -21,12 +28,23 @@ import paradiseRoom3 from '../assets/hotel1/paradiseRoom3.jpg';
 
 const ReservationPage = () => {
 
-    const [userInfo, setUserInfo] = useState({ name: '' });
+    const user = useSelector(state => state.user); // 추가
+    const search = useSelector(state => state.search);
+    const dispatch = useDispatch();
+    const { destination, startDate, endDate, people } = useSelector(state => state.search);
     const [dateRange, setDateRange] = useState([null, null]);
-    const [startDate, endDate] = dateRange;
     const [activeTab, setActiveTab] = useState(null);
     const [showAllReviews, setShowAllReviews] = useState(false);
     const [hotel, setHotel] = useState(null); // 백엔드 호텔 정보 추가
+    const { id } = useParams();               // 백엔드 호텔 정보 추가
+    console.log("받은 hotel id:", id);
+    const [rhotel, rsetHotel] = useState(null); // 백엔드 호텔 정보 추가
+    const [rrooms, rsetRooms] = useState([]); // 백엔드 호텔 정보 추가
+    const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+    const [selectedRoom, setSelectedRoom] = useState(null);
+    const [guestName, setGuestName] = useState("");
+    const [guestEmail, setGuestEmail] = useState("");
+    const [guestPhone, setGuestPhone] = useState("");
 
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     Modal.setAppElement('#root');
@@ -38,23 +56,6 @@ const ReservationPage = () => {
     const roomsRef = useRef(null);
     const policyRef = useRef(null);
     const reviewsRef = useRef(null);
-
-    useEffect(() => {
-        fetch('http://localhost:8080/api/userinfo', {
-            method: 'GET',
-            credentials: 'include',
-        })
-            .then(res => {
-                if (!res.ok) throw new Error('사용자 정보 불러오기 실패');
-                return res.json();
-            })
-            .then(data => {
-                setUserInfo({ name: data.name });
-            })
-            .catch(err => {
-                console.error('사용자 정보 로드 실패:', err);
-            });
-    }, []);
 
     const handleTabClick = (tab) => {
         setActiveTab(tab);
@@ -74,6 +75,7 @@ const ReservationPage = () => {
     const [reviews, setReviews] = useState([]);
     const [newReview, setNewReview] = useState("");
     const [newScore, setNewScore] = useState(10); // 기본값 10점
+
 
     // --- 2) 카카오 스크립트 한 번만 로드 ---
     useEffect(() => {
@@ -97,8 +99,7 @@ const ReservationPage = () => {
 
     // --- 3) 호텔 정보 fetch ---
     useEffect(() => {
-        const hotelId = 1;  // 예시
-        fetch(`http://localhost:8080/api/hotels/${hotelId}`, { credentials: 'include' })
+        fetch(`http://localhost:8080/api/hotels/${id}`, { credentials: 'include' })
             .then(res => {
                 if (!res.ok) throw new Error('호텔을 못 찾음');
                 return res.json();
@@ -133,7 +134,7 @@ const ReservationPage = () => {
 
         const review = {
             id: reviews.length + 1,
-            user: userInfo.name || "익명", // ✅ 사용자 이름 적용
+            user: user.username || "익명", // ✅ 사용자 이름 적용
             date: new Date().toISOString().split("T")[0],
             content: `${newScore}/10 ${newReview}`,
             score: newScore
@@ -148,29 +149,13 @@ const ReservationPage = () => {
         ? (reviews.reduce((sum, r) => sum + (r.score || 0), 0) / reviews.length).toFixed(1)
         : "0.0";
 
-    const rooms = [
-        {
-            id: 1,
-            name: "디럭스룸, 부분 바다 전망 (Annex Building)",
-            specs: ["3명", "더블침대 1개", "2인 수용장 무료 이용(1일 기준)", "스파 이용"],
-            price: 364000,
-            image: paradiseRoom1,
-        },
-        {
-            id: 2,
-            name: "디럭스 더블룸, 바다 전망 (Main Building)",
-            specs: ["3명", "더블침대 1개", "2인 수영장 무료 이용(1일 기준)", "스파 이용", "바다 전망"],
-            price: 382000,
-            image: paradiseRoom2,
-        },
-        {
-            id: 3,
-            name: "이그제큐티브 더블룸, 시내 전망 (Main Building)",
-            specs: ["2인", "더블침대 1개", "2인 유럽식 아침 식사", "2인 수영장 무료 이용(1일 기준)", "시내 전망"],
-            price: 436800,
-            image: paradiseRoom3,
-        },
-    ];
+    const rooms = rrooms.map(room => ({
+        id: room.roomID,
+        name: room.room_name,
+        specs: [room.room_description],
+        price: room.price,
+        image: paradiseRoom1,
+    }));
 
     const imageList = [
         paradise1,
@@ -180,6 +165,60 @@ const ReservationPage = () => {
         paradise5,
     ];
 
+    const openBookingModal = (room) => {
+        setSelectedRoom(room);
+        setIsBookingModalOpen(true);
+    };
+
+    const closeBookingModal = () => {
+        setIsBookingModalOpen(false);
+        setGuestName("");
+        setGuestEmail("");
+        setGuestPhone("");
+    };
+
+    const handlePayment = () => {
+        console.log("예약 정보 전송:", {
+            room: selectedRoom,
+            name: guestName,
+            email: guestEmail,
+            phone: guestPhone,
+        });
+        alert("결제가 완료되었습니다!");
+        closeBookingModal();
+    };
+
+    useEffect(() => {
+        fetch('http://localhost:8080/api/userinfo', {
+            method: 'GET',
+            credentials: 'include',
+        })
+            .then(res => {
+                if (!res.ok) throw new Error('사용자 정보 불러오기 실패');
+                return res.json();
+            })
+            .then(data => {
+                dispatch(setUserInfo({
+                    username: data.name,
+                    email: data.email,
+                    loginID: data.loginID,
+                    punNumber: data.punNumber,
+                }));
+            })
+            .catch(err => {
+                console.error('사용자 정보 로드 실패:', err);
+            });
+    }, []);
+
+    useEffect(() => {
+        // 호텔 정보 불러오기 (API 엔드포인트는 예시)
+        axios.get(`http://localhost:8080/api/hotels/${id}`).then(res => setHotel(res.data));
+        // 방 정보도 id로 필터 (혹은 hotels에서 room을 받아와도 됨)
+        axios.get(`http://localhost:8080/api/rooms/hotel/${id}`).then(res => rsetRooms(res.data));
+    }, [id]);
+
+    //  if (!rhotel) return <div>로딩중...</div>;
+
     return (
         <div>
             {/* Header */}
@@ -188,7 +227,7 @@ const ReservationPage = () => {
                     <Link to="/">🔴 Stay Manager</Link>
                 </div>
                 <div className="navLinks">
-                    <a>{userInfo.name}님</a>
+                    <a>{user.username}님</a>
                     <a href="/myPage">MyPage</a>
                     <a href="/savedPage">찜 목록</a>
                     <a href="/">로그아웃</a>
@@ -199,15 +238,15 @@ const ReservationPage = () => {
             <div className={styles.searchBox}>
                 <input
                     type="text"
-                    placeholder="목적지"
-                    className={styles.input}
+                    value={destination}
+                    onChange={(e) => dispatch(setDestination(e.target.value))}
                 />
 
                 <DatePicker
                     selectsRange
                     startDate={startDate}
                     endDate={endDate}
-                    onChange={(update) => setDateRange(update)}
+                    onChange={([start, end]) => dispatch(setDates({ startDate: start, endDate: end }))}
                     isClearable={false}
                     placeholderText="날짜 선택"
                     dateFormat="yyyy/MM/dd"
@@ -218,16 +257,16 @@ const ReservationPage = () => {
                 <input
                     type="number"
                     min="1"
-                    placeholder="인원 수"
-                    className={styles.peopleInput}
+                    value={people}
+                    onChange={(e) => dispatch(setPeople(Number(e.target.value)))}
                 />
 
                 <button>
-                    <img src={search} alt="검색" />
+                    <img src={searchIcon} alt="검색" />
                 </button>
             </div>
 
-            <a href="#" className={styles.backLink}>+ 돌아가기</a>
+            <Link to="/listPage" className={styles.backLink}>+ 돌아가기</Link>
 
             <section className={styles.hero}>
                 <div className={styles.big} style={{ backgroundImage: `url(${paradise1})` }}></div>
@@ -272,8 +311,12 @@ const ReservationPage = () => {
 
             <div ref={introRef} className={styles.hotelInfo}>
                 <div className={styles.hotelDetails}>
-                    <div className={styles.hotelTitle}>파라다이스 호텔 부산</div>
-                    <div className={styles.hotelSubtitle}>Paradise Hotel Busan</div>
+                    {hotel ? (
+                        <div className={styles.hotelTitle}>{hotel.hotelName}</div>
+                    ) : (
+                        <div className={styles.hotelTitle}>호텔 정보를 불러오는 중...</div>
+                    )}
+                    {/*      <div className={styles.hotelSubtitle}>Paradise Hotel Busan</div> */}
                     <div className={styles.stars}>★★★★★</div>
                     <div className={styles.facilities}>
                         <div className={styles.serviceInfo}>시설/서비스 요약 정보</div>
@@ -374,7 +417,9 @@ const ReservationPage = () => {
                                 <div className={styles.taxNote}>세금 및 수수료 포함</div>
                             </div>
 
-                            <button className={styles.reserveBtn}>예약하기</button>
+                            <button className={styles.reserveBtn} onClick={() => openBookingModal(room)}>
+                                예약하기
+                            </button>
                         </div>
                     </div>
                 ))}
@@ -488,6 +533,57 @@ const ReservationPage = () => {
                     ))}
                 </div>
                 <button onClick={closeGalleryModal} className={styles.closeBtn}>닫기</button>
+            </Modal>
+
+            <Modal
+                isOpen={isBookingModalOpen}
+                onRequestClose={closeBookingModal}
+                contentLabel="객실 예약하기"
+                className={styles.modal}
+                overlayClassName={styles.overlay}
+            >
+                <h2>객실 예약</h2>
+                {selectedRoom && (
+                    <div className={styles.bookingRoomInfo}>
+                        <div
+                            className={styles.bookingImage}
+                            style={{ backgroundImage: `url(${selectedRoom.image})` }}
+                        ></div>
+                        <div className={styles.roomName}>{selectedRoom.name}</div>
+                        <div className={styles.roomSpecs}>
+                            {selectedRoom.specs.map((spec, idx) => (
+                                <div key={idx}>- {spec}</div>
+                            ))}
+                        </div>
+                        <div className={styles.price}>₩{selectedRoom.price.toLocaleString()}</div>
+                    </div>
+                )}
+
+                <div className={styles.bookingForm}>
+                    <input
+                        type="text"
+                        placeholder="체크인 성함"
+                        value={guestName}
+                        onChange={(e) => setGuestName(e.target.value)}
+                        className={styles.inputField}
+                    />
+                    <input
+                        type="email"
+                        placeholder="이메일"
+                        value={guestEmail}
+                        onChange={(e) => setGuestEmail(e.target.value)}
+                        className={styles.inputField}
+                    />
+                    <input
+                        type="tel"
+                        placeholder="전화번호"
+                        value={guestPhone}
+                        onChange={(e) => setGuestPhone(e.target.value)}
+                        className={styles.inputField}
+                    />
+                    <button className={styles.paymentBtn} onClick={handlePayment}>결제하기</button>
+                    <button className={styles.closeBtn} onClick={closeBookingModal}>닫기</button>
+                </div>
             </Modal>
         </div>
     );

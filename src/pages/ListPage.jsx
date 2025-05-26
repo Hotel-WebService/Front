@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setUserInfo, updateUserInfo } from '../features/userSlice';
 import { setSortOption, setFilters, toggleService } from '../features/filterSlice';
-import { setDateRange } from '../features/reservationSlice';
+import { setDestination, setDates, setPeople } from '../features/searchSlice';
+import { toggleLike as toggleLikeAction } from '../features/likedHotelsSlice';
 import styles from '../css/ListPage.module.css';
 import DatePicker from 'react-datepicker';
 import { ko } from 'date-fns/locale';
@@ -12,7 +13,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import { Navigation } from 'swiper/modules';
-
+import HotelList from './HotelList'; // 백엔드 추가
 
 // 이미지
 import search from '../assets/icon/search.jpg';
@@ -32,74 +33,80 @@ import twitter from '../assets/icon/twitter.jpg';
 
 const ListPage = () => {
   const dispatch = useDispatch();
+  const { destination, startDate, endDate, people } = useSelector(state => state.search);
   const sortOption = useSelector(state => state.filter.sortOption);
   const filters = useSelector(state => state.filter.filters);
+  const likedHotels = useSelector(state => state.likedHotels);
+  const [likedHotelIds, setLikedHotelIds] = useState([]);
+
   const { dateRange } = useSelector(state => state.reservation);
   const user = useSelector(state => state.user);
 
-  const [startDate, endDate] = Array.isArray(dateRange) ? dateRange : [null, null];
+  // 소스 추가: 호텔 DB 정보 저장
+  const [hotelsinfo, setHotelsinfo] = useState([]);
+  // 소스 추가: 객실(방) DB 정보 저장
+  const [room, setRoom] = useState([]);
+
   const navigate = useNavigate();
 
-  const [hotels, setHotels] = useState([
-    {
-      id: 1,
-      name: '파라다이스 호텔 부산',
-      location: '해운대',
-      rating: '9.7',
-      discount: '14%',
-      pricePerNight: '₩125,000',
-      total: '₩875,000',
-      liked: false,
-      images: [
-        paradise1,
-        paradise2,
-        paradise3,
-      ],
-      facilities: ['호텔', '수영장', '조식제공', '주차시설']
-    },
-    {
-      id: 2,
-      name: '시그니엘 부산',
-      location: '해운대',
-      rating: '9.5',
-      discount: '8%',
-      pricePerNight: '₩137,000',
-      total: '₩1,050,000',
-      liked: false,
-      images: [
-        signiel1,
-        signiel2,
-        signiel3,
-      ],
-      facilities: ['호텔', '조식제공', '주차시설']
-    },
-    {
-      id: 3,
-      name: '그랜드 조선 부산',
-      location: '해운대',
-      rating: '9.3',
-      discount: '18%',
-      pricePerNight: '₩155,000',
-      total: '₩920,000',
-      liked: false,
-      images: [
-        grand1,
-        grand2,
-        grand3,
-      ],
-      facilities: ['호텔', '수영장', '주차시설']
-    },
-  ]);
+  const [visibleCount, setVisibleCount] = useState(2); // 최초 2개만 보이기
 
-  const toggleLike = (id) => {
-    setHotels(prev =>
+  // 호텔 정보 가져오기 (누락된 부분)
+  useEffect(() => {
+    fetch('http://localhost:8080/api/hotels', { credentials: 'include' })
+      .then(res => {
+        if (!res.ok) throw new Error('fetch hotels failed');
+        return res.json();
+      })
+      .then(list => setHotelsinfo(list)) // ✅ 여기!
+      .catch(console.error);
+  }, []);
+
+  // 소스 추가: DB에서 객실(방) 목록 불러오기
+  useEffect(() => {
+    fetch('http://localhost:8080/api/rooms', { credentials: 'include' })
+      .then(res => {
+        if (!res.ok) throw new Error('fetch rooms failed');
+        return res.json();
+      })
+      .then(list => setRoom(list))    // room에 저장
+      .catch(console.error);
+  }, []);
+
+  const mappedHotels = hotelsinfo.map(hotel => ({
+    id: hotel.hotelID,
+    name: hotel.hotelName,
+    location: hotel.address,
+    rating: '9.0', // rating은 없는 경우 임의로 지정하거나 별도 API 필요
+    discount: '0%', // 할인 없으면 0%, 실제 할인율 있으면 계산
+    pricePerNight: room.find(r => r.hotelID === hotel.hotelID)?.price
+      ? `₩${room.find(r => r.hotelID === hotel.hotelID).price.toLocaleString()}`
+      : '가격정보없음',
+    total: room.find(r => r.hotelID === hotel.hotelID)?.price
+      ? `₩${room.find(r => r.hotelID === hotel.hotelID).price.toLocaleString()}`
+      : '가격정보없음',
+    liked: false,
+    images: [paradise1, paradise2, paradise3], // DB에 이미지 없으면 샘플 이미지
+    facilities: [
+      '호텔',
+      '수영장',
+      '조식제공',
+      hotel.parking_lot ? '주차시설' : null,
+      // ...필요하면 더 추가
+    ].filter(Boolean)
+  }));
+
+  console.log('매핑된 호텔 정보:', mappedHotels);
+
+  const toggleLocalLike = (id) => {
+    setHotelsinfo(prev =>
       prev.map(item =>
         item.id === id ? { ...item, liked: !item.liked } : item
       )
     );
   };
 
-  const filteredHotels = [...hotels].filter(hotel => {
+  const filteredHotels = [...mappedHotels].filter(hotel => {
     // 서비스 필터: 체크한 모든 서비스가 호텔의 facilities에 포함되어야 통과
     const serviceMatch = filters.services.every(service =>
       hotel.facilities.includes(service)
@@ -129,6 +136,37 @@ const ListPage = () => {
   const handleServiceChange = (e) => {
     dispatch(toggleService(e.target.value));
   };
+
+  const handleLike = async (hotel) => {
+    try {
+      const res = await fetch(`http://localhost:8080/api/likes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ hotelId: hotel.id })
+      });
+      if (res.ok) {
+        setLikedHotelIds(prev => [...prev, hotel.id]);
+      }
+    } catch (err) {
+      console.error('찜 추가 실패:', err);
+    }
+  };
+
+  const handleUnlike = async (hotelId) => {
+    try {
+      const res = await fetch(`http://localhost:8080/api/likes/${hotelId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (res.ok) {
+        setLikedHotelIds(prev => prev.filter(id => id !== hotelId));
+      }
+    } catch (err) {
+      console.error('찜 해제 실패:', err);
+    }
+  };
+
 
   // 1) 마운트 시 사용자 정보 가져오기 백엔드추가
   useEffect(() => {
@@ -207,6 +245,16 @@ const ListPage = () => {
     }
   };
 
+  const handleLoadMore = () => {
+    setVisibleCount(prev => prev + 2); // 2개씩 추가
+    console.log('매핑된 호텔 정보:', mappedHotels);
+    console.log('🔍 filters:', filters);
+    console.log('📌 filteredHotels.length:', filteredHotels.length);
+    console.log('📌 sortedHotels.length:', sortedHotels.length);
+    console.log('📌 visibleCount:', visibleCount);
+  };
+
+
   return (
     <div>
       {/* Header */}
@@ -229,6 +277,8 @@ const ListPage = () => {
       <div className={styles.searchBox}>
         <input
           type="text"
+          value={destination}
+          onChange={(e) => dispatch(setDestination(e.target.value))}
           placeholder="목적지"
           className={styles.input}
         />
@@ -237,7 +287,7 @@ const ListPage = () => {
           selectsRange
           startDate={startDate}
           endDate={endDate}
-          onChange={(update) => dispatch(setDateRange(update))}
+          onChange={([start, end]) => dispatch(setDates({ startDate: start, endDate: end }))}
           isClearable={false}
           placeholderText="날짜 선택"
           dateFormat="yyyy/MM/dd"
@@ -247,7 +297,9 @@ const ListPage = () => {
 
         <input
           type="number"
-          min="1"
+          value={people}
+          min={1}
+          onChange={(e) => dispatch(setPeople(Number(e.target.value)))}
           placeholder="인원 수"
           className={styles.peopleInput}
         />
@@ -317,72 +369,71 @@ const ListPage = () => {
             </select>
           </div>
 
-          {sortedHotels.length > 0 ? (
-            sortedHotels.map(item => (
+
+
+          {sortedHotels.slice(0, visibleCount).map(item => {
+            const isLiked = likedHotels.some(h => h.id === item.id);
+            return (
               <div key={item.id} className={styles.cardWrapper}>
-                {/* 카드 내용 */}
+                <Link to={`/reservation/${item.id}`} className={styles.cardLink}>
+                  <div className={styles.card}>
+                    <div className={styles.imageGroup}>
+                      <Swiper
+                        modules={[Navigation]}
+                        navigation
+                        spaceBetween={10}
+                        slidesPerView={1}
+                        className={styles.cardSlider}
+                      >
+                        {item.images.map((imgSrc, index) => (
+                          <SwiperSlide key={index}>
+                            <img className={styles.cardImg} src={imgSrc} alt={`호텔 이미지 ${index + 1}`} />
+                          </SwiperSlide>
+                        ))}
+                      </Swiper>
+                    </div>
+                    <div className={styles.cardInfo}>
+                      <div className={styles.cardTop}>
+                        <h3 className={styles.hotelName}>{item.name}</h3>
+                        <button
+                          className={styles.btnSchedule}
+                          style={{ backgroundColor: isLiked ? '#40c9c9' : '#ccc' }}
+                          onClick={(e) => {
+                            e.preventDefault(); // 페이지 이동 막기
+                            handleLike(item);  // Redux 상태 업데이트
+                          }}
+                        >
+                          {isLiked ? '찜해제' : '찜하기'}
+                        </button>
+                      </div>
+                      <div className={styles.cardMiddle}>
+                        <p className={styles.location}>{item.location}</p>
+                        <div className={styles.facilities}>
+                          {item.facilities.map((f, i) => (
+                            <span key={i}>{f}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className={styles.cardBottom}>
+                        <div className={styles.rating}>★ {item.rating}</div>
+                        <div className={styles.priceInfo}>
+                          <span className={styles.badgeDiscount}>-{item.discount}</span>
+                          <p className={styles.perNight}>1박 요금 {item.pricePerNight}</p>
+                          <p className={styles.total}>{item.total}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
               </div>
-            ))
-          ) : (
-            <div className={styles.emptyBox}>
-              조건에 맞는 호텔이 없습니다.
-            </div>
+            );
+          })}
+          {visibleCount < sortedHotels.length && (
+            <button className={styles.loadMore} onClick={handleLoadMore}>
+              더보기
+            </button>
           )}
 
-          {sortedHotels.map(item => (
-            <div key={item.id} className={styles.cardWrapper}>
-              <div className={styles.card}>
-                <div className={styles.imageGroup}>
-                  <Swiper
-                    modules={[Navigation]}
-                    navigation
-                    spaceBetween={10}
-                    slidesPerView={1}
-                    className={styles.cardSlider}
-                  >
-                    {item.images.map((imgSrc, index) => (
-                      <SwiperSlide key={index}>
-                        <img
-                          className={styles.cardImg}
-                          src={imgSrc}
-                          alt={`호텔 이미지 ${index + 1}`}
-                        />
-                      </SwiperSlide>
-                    ))}
-                  </Swiper>
-                </div>
-                <div className={styles.cardInfo}>
-                  <div className={styles.cardTop}>
-                    <h3 className={styles.hotelName}>{item.name}</h3>
-                    <button
-                      className={styles.btnSchedule}
-                      style={{ backgroundColor: item.liked ? '#40c9c9' : '#ccc' }}
-                      onClick={() => toggleLike(item.id)}
-                    >
-                      {item.liked ? '찜해제' : '찜하기'}
-                    </button>
-                  </div>
-                  <div className={styles.cardMiddle}>
-                    <p className={styles.location}>{item.location}</p>
-                    <div className={styles.facilities}>
-                      {item.facilities.map((f, i) => (
-                        <span key={i}>{f}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className={styles.cardBottom}>
-                    <div className={styles.rating}>★ {item.rating}</div>
-                    <div className={styles.priceInfo}>
-                      <span className={styles.badgeDiscount}>-{item.discount}</span>
-                      <p className={styles.perNight}>1박 요금 {item.pricePerNight}</p>
-                      <p className={styles.total}>{item.total}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-          <button className={styles.loadMore}>더보기</button>
         </section>
       </div>
 

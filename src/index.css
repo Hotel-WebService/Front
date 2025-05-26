@@ -73,6 +73,10 @@ body .react-datepicker__navigation-icon::before {
   border-color: #ffffff;
 }
 
+body .react-datepicker-popper {
+  z-index: 9999 !important;
+}
+
 /*DatePicker*/
 
 /* Footer */
