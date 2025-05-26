@@ -16,14 +16,14 @@ import instargram from '../assets/icon/instargram.jpg';
 import facebook from '../assets/icon/facebook.jpg';
 import twitter from '../assets/icon/twitter.jpg';
 import searchIcon from '../assets/icon/search.jpg';
-import paradise1 from '../assets/hotel1/paradise1.jpg';
-import paradise2 from '../assets/hotel1/paradise2.jpg';
-import paradise3 from '../assets/hotel1/paradise3.jpg';
-import paradise4 from '../assets/hotel1/paradise4.jpg';
-import paradise5 from '../assets/hotel1/paradise5.jpg';
-import paradiseRoom1 from '../assets/hotel1/paradiseRoom1.jpg';
-import paradiseRoom2 from '../assets/hotel1/paradiseRoom2.jpg';
-import paradiseRoom3 from '../assets/hotel1/paradiseRoom3.jpg';
+import courtyard1 from '../assets/hotel2/courtyard1.jpg';
+import courtyard2 from '../assets/hotel2/courtyard2.jpg';
+import courtyard3 from '../assets/hotel2/courtyard3.jpg';
+import courtyard4 from '../assets/hotel2/courtyard4.jpg';
+import courtyard5 from '../assets/hotel2/courtyard5.jpg';
+import courtyardRoom1 from '../assets/hotel2/courtyardRoom1.jpg';
+import courtyardRoom2 from '../assets/hotel2/courtyardRoom2.jpg';
+import courtyardRoom3 from '../assets/hotel2/courtyardRoom3.jpg';
 
 
 const ReservationPage = () => {
@@ -133,17 +133,48 @@ const ReservationPage = () => {
         if (newReview.trim() === "") return;
 
         const review = {
-            id: reviews.length + 1,
-            user: user.username || "익명", // ✅ 사용자 이름 적용
+            hotelId: id, // 서버에서 hotelId가 필요하다면 포함
+            user: user.username || "익명",
             date: new Date().toISOString().split("T")[0],
             content: `${newScore}/10 ${newReview}`,
             score: newScore
         };
 
-        setReviews([review, ...reviews]);
+        // 1. 로컬 상태 업데이트
+        setReviews(prev => [review, ...prev]);
         setNewReview("");
         setNewScore(10);
+
+        // 2. 서버에 저장 요청
+        fetch("http://localhost:8080/api/reviews", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(review), // ✅ 배열이 아니라 하나의 리뷰 객체
+        })
+            .then(res => {
+                if (!res.ok) throw new Error("리뷰 저장 실패");
+                return res.json();
+            })
+            .then(data => {
+                console.log("리뷰 저장 완료:", data);
+            })
+            .catch(err => {
+                console.error("리뷰 저장 오류:", err);
+            });
     };
+
+    useEffect(() => {
+        fetch(`http://localhost:8080/api/reviews/hotel/${id}`, {
+            credentials: 'include'
+        })
+            .then(res => {
+                if (!res.ok) throw new Error("리뷰 불러오기 실패");
+                return res.json();
+            })
+            .then(data => setReviews(data))
+            .catch(console.error);
+    }, [id]);
 
     const averageScore = reviews.length
         ? (reviews.reduce((sum, r) => sum + (r.score || 0), 0) / reviews.length).toFixed(1)
@@ -154,15 +185,15 @@ const ReservationPage = () => {
         name: room.room_name,
         specs: [room.room_description],
         price: room.price,
-        image: paradiseRoom1,
+        image: courtyardRoom1,
     }));
 
     const imageList = [
-        paradise1,
-        paradise2,
-        paradise3,
-        paradise4,
-        paradise5,
+        courtyard1,
+        courtyard2,
+        courtyard3,
+        courtyard4,
+        courtyard5,
     ];
 
     const openBookingModal = (room) => {
@@ -269,12 +300,12 @@ const ReservationPage = () => {
             <Link to="/listPage" className={styles.backLink}>+ 돌아가기</Link>
 
             <section className={styles.hero}>
-                <div className={styles.big} style={{ backgroundImage: `url(${paradise1})` }}></div>
-                <div className={styles.thumb1} style={{ backgroundImage: `url(${paradise2})` }}></div>
-                <div className={styles.thumb2} style={{ backgroundImage: `url(${paradise3})` }}></div>
-                <div className={styles.thumb3} style={{ backgroundImage: `url(${paradise4})` }}></div>
-                <div className={styles.thumb4} style={{ backgroundImage: `url(${paradise5})` }}>
-                    <div className={styles.thumb4} style={{ backgroundImage: `url(${paradise5})` }} onClick={openGalleryModal}>
+                <div className={styles.big} style={{ backgroundImage: `url(${courtyard1})` }}></div>
+                <div className={styles.thumb1} style={{ backgroundImage: `url(${courtyard2})` }}></div>
+                <div className={styles.thumb2} style={{ backgroundImage: `url(${courtyard3})` }}></div>
+                <div className={styles.thumb3} style={{ backgroundImage: `url(${courtyard4})` }}></div>
+                <div className={styles.thumb4} style={{ backgroundImage: `url(${courtyard5})` }}>
+                    <div className={styles.thumb4} style={{ backgroundImage: `url(${courtyard5})` }} onClick={openGalleryModal}>
                         <div className={styles.more}>+{imageList.length - 5}</div>
                     </div>
                 </div>
@@ -316,7 +347,7 @@ const ReservationPage = () => {
                     ) : (
                         <div className={styles.hotelTitle}>호텔 정보를 불러오는 중...</div>
                     )}
-                    {/*      <div className={styles.hotelSubtitle}>Paradise Hotel Busan</div> */}
+
                     <div className={styles.stars}>★★★★★</div>
                     <div className={styles.facilities}>
                         <div className={styles.serviceInfo}>시설/서비스 요약 정보</div>
@@ -407,8 +438,8 @@ const ReservationPage = () => {
                                 {room.name}
                             </div>
                             <div className={styles.roomSpecs}>
-                                {room.specs.map((spec, idx) => (
-                                    <div key={idx}>- {spec}</div>
+                                {room.specs[0].split(',').map((line, idx) => (
+                                    <div key={idx}>- {line.trim()}</div>
                                 ))}
                             </div>
                             <div className={styles.priceBox}>
@@ -549,13 +580,25 @@ const ReservationPage = () => {
                             className={styles.bookingImage}
                             style={{ backgroundImage: `url(${selectedRoom.image})` }}
                         ></div>
+
                         <div className={styles.roomName}>{selectedRoom.name}</div>
-                        <div className={styles.roomSpecs}>
-                            {selectedRoom.specs.map((spec, idx) => (
-                                <div key={idx}>- {spec}</div>
-                            ))}
+
+                        {/* ✅ 좌우 나란히 배치할 wrapper 추가 */}
+                        <div className={styles.roomDetailsWrapper}>
+                            {/* 왼쪽: 스펙 */}
+                            <div className={styles.roomSpecs}>
+                                {selectedRoom.specs[0].split(',').map((line, idx) => (
+                                    <div key={idx}>- {line.trim()}</div>
+                                ))}
+                            </div>
+
+                            {/* 오른쪽: 가격 */}
+                            <div className={styles.priceBox}>
+                                <div className={styles.modalPrice}>₩{selectedRoom.price.toLocaleString()}</div>
+                                <div className={styles.totalPrice}>총 요금: ₩{Math.round(selectedRoom.price * 1.18).toLocaleString()}</div>
+                                <div className={styles.taxNote}>세금 및 수수료 포함</div>
+                            </div>
                         </div>
-                        <div className={styles.price}>₩{selectedRoom.price.toLocaleString()}</div>
                     </div>
                 )}
 

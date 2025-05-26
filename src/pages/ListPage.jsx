@@ -17,12 +17,12 @@ import HotelList from './HotelList'; // 백엔드 추가
 
 // 이미지
 import search from '../assets/icon/search.jpg';
-import grand1 from '../assets//hotel2/grand1.jpg';
-import grand2 from '../assets/hotel2/grand2.jpg';
-import grand3 from '../assets/hotel2/grand3.jpg';
-import paradise1 from '../assets/hotel1/paradise1.jpg';
-import paradise2 from '../assets/hotel1/paradise2.jpg';
-import paradise3 from '../assets/hotel1/paradise3.jpg';
+import banyanTree1 from '../assets//hotel1/banyanTree1.jpg';
+import banyanTree2 from '../assets/hotel1/banyanTree2.jpg';
+import banyanTree3 from '../assets/hotel1/banyanTree3.jpg';
+import courtyard1 from '../assets/hotel2/courtyard1.jpg';
+import courtyard2 from '../assets/hotel2/courtyard2.jpg';
+import courtyard3 from '../assets/hotel2/courtyard3.jpg';
 import signiel1 from '../assets/hotel3/signiel1.jpg';
 import signiel2 from '../assets/hotel3/signiel2.jpg';
 import signiel3 from '../assets/hotel3/signiel3.jpg';
@@ -38,6 +38,8 @@ const ListPage = () => {
   const filters = useSelector(state => state.filter.filters);
   const likedHotels = useSelector(state => state.likedHotels);
   const [likedHotelIds, setLikedHotelIds] = useState([]);
+  const [allReviews, setAllReviews] = useState([]);
+  const [searchTriggeredDestination, setSearchTriggeredDestination] = useState(null);
 
   const { dateRange } = useSelector(state => state.reservation);
   const user = useSelector(state => state.user);
@@ -73,28 +75,47 @@ const ListPage = () => {
       .catch(console.error);
   }, []);
 
-  const mappedHotels = hotelsinfo.map(hotel => ({
-    id: hotel.hotelID,
-    name: hotel.hotelName,
-    location: hotel.address,
-    rating: '9.0', // rating은 없는 경우 임의로 지정하거나 별도 API 필요
-    discount: '0%', // 할인 없으면 0%, 실제 할인율 있으면 계산
-    pricePerNight: room.find(r => r.hotelID === hotel.hotelID)?.price
-      ? `₩${room.find(r => r.hotelID === hotel.hotelID).price.toLocaleString()}`
-      : '가격정보없음',
-    total: room.find(r => r.hotelID === hotel.hotelID)?.price
-      ? `₩${room.find(r => r.hotelID === hotel.hotelID).price.toLocaleString()}`
-      : '가격정보없음',
-    liked: false,
-    images: [paradise1, paradise2, paradise3], // DB에 이미지 없으면 샘플 이미지
-    facilities: [
-      '호텔',
-      '수영장',
-      '조식제공',
-      hotel.parking_lot ? '주차시설' : null,
-      // ...필요하면 더 추가
-    ].filter(Boolean)
-  }));
+  useEffect(() => {
+    fetch('http://localhost:8080/api/reviews', { credentials: 'include' })
+      .then(res => {
+        if (!res.ok) throw new Error('리뷰 불러오기 실패');
+        return res.json();
+      })
+      .then(setAllReviews)
+      .catch(console.error);
+  }, []);
+
+  const mappedHotels = hotelsinfo.map(hotel => {
+    // 해당 호텔의 리뷰만 필터링
+    const hotelReviews = allReviews.filter(r => r.hotelID === hotel.hotelID);
+
+    // 평균 점수 계산
+    const averageRating = hotelReviews.length
+      ? (hotelReviews.reduce((sum, r) => sum + r.score, 0) / hotelReviews.length).toFixed(1)
+      : "0.0";
+
+    return {
+      id: hotel.hotelID,
+      name: hotel.hotelName,
+      location: hotel.address,
+      rating: averageRating, // ✅ 여기 실제 평균 평점으로 대체
+      discount: '0%',
+      pricePerNight: room.find(r => r.hotelID === hotel.hotelID)?.price
+        ? `₩${room.find(r => r.hotelID === hotel.hotelID).price.toLocaleString()}`
+        : '가격정보없음',
+      total: room.find(r => r.hotelID === hotel.hotelID)?.price
+        ? `₩${room.find(r => r.hotelID === hotel.hotelID).price.toLocaleString()}`
+        : '가격정보없음',
+      liked: false,
+      images: [courtyard1, courtyard2, courtyard3],
+      facilities: [
+        '호텔',
+        '수영장',
+        '조식제공',
+        hotel.parking_lot ? '주차시설' : null,
+      ].filter(Boolean)
+    };
+  });
 
   console.log('매핑된 호텔 정보:', mappedHotels);
 
@@ -107,7 +128,6 @@ const ListPage = () => {
   };
 
   const filteredHotels = [...mappedHotels].filter(hotel => {
-    // 서비스 필터: 체크한 모든 서비스가 호텔의 facilities에 포함되어야 통과
     const serviceMatch = filters.services.every(service =>
       hotel.facilities.includes(service)
     );
@@ -117,7 +137,11 @@ const ListPage = () => {
     const price = parseInt(hotel.pricePerNight.replace(/[₩,]/g, ''));
     const priceMatch = price <= filters.price;
 
-    return serviceMatch && starMatch && priceMatch;
+    const destinationMatch = searchTriggeredDestination
+      ? hotel.location.toLowerCase().includes(searchTriggeredDestination.trim().toLowerCase())
+      : true;
+
+    return serviceMatch && starMatch && priceMatch && destinationMatch;
   });
 
   const sortedHotels = [...filteredHotels].sort((a, b) => {
@@ -167,6 +191,9 @@ const ListPage = () => {
     }
   };
 
+  const handleSearchClick = () => {
+    setSearchTriggeredDestination(destination);
+  };
 
   // 1) 마운트 시 사용자 정보 가져오기 백엔드추가
   useEffect(() => {
@@ -304,9 +331,10 @@ const ListPage = () => {
           className={styles.peopleInput}
         />
 
-        <button>
+        <button onClick={handleSearchClick}>
           <img src={search} alt="검색" />
         </button>
+
       </div>
 
       {/* Main */}

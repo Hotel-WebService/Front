@@ -12,12 +12,12 @@ import { Navigation } from 'swiper/modules';
 import instargram from '../assets/icon/instargram.jpg';
 import facebook from '../assets/icon/facebook.jpg';
 import twitter from '../assets/icon/twitter.jpg';
-import grand1 from '../assets/hotel2/grand1.jpg';
-import grand2 from '../assets/hotel2/grand2.jpg';
-import grand3 from '../assets/hotel2/grand3.jpg';
-import paradise1 from '../assets/hotel1/paradise1.jpg';
-import paradise2 from '../assets/hotel1/paradise2.jpg';
-import paradise3 from '../assets/hotel1/paradise3.jpg';
+import banyanTree1 from '../assets/hotel1/banyanTree1.jpg';
+import banyanTree2 from '../assets/hotel1/banyanTree2.jpg';
+import banyanTree3 from '../assets/hotel1/banyanTree3.jpg';
+import courtyard1 from '../assets/hotel2/courtyard1.jpg';
+import courtyard2 from '../assets/hotel2/courtyard2.jpg';
+import courtyard3 from '../assets/hotel2/courtyard3.jpg';
 import signiel1 from '../assets/hotel3/signiel1.jpg';
 import signiel2 from '../assets/hotel3/signiel2.jpg';
 import signiel3 from '../assets/hotel3/signiel3.jpg';
@@ -27,57 +27,6 @@ const SavedPage = () => {
     const dispatch = useDispatch();
     const likedHotels = useSelector(state => state.likedHotels);
     const [savedHotels, setSavedHotels] = useState([]);
-    
-    // const [savedItems, setSavedItems] = useState([
-    //     {
-    //         id: 1,
-    //         hotel: '파라다이스 호텔 부산',
-    //         location: '해운대',
-    //         rating: '9.7',
-    //         discount: '14%',
-    //         pricePerNight: '₩125,000',
-    //         total: '₩875,000',
-    //         liked: true,
-    //         selected: false,
-    //         images: [
-    //             paradise1,
-    //             paradise2,
-    //             paradise3,
-    //         ]
-    //     },
-    //     {
-    //         id: 2,
-    //         hotel: '시그니엘 부산',
-    //         location: '해운대',
-    //         rating: '9.5',
-    //         discount: '8%',
-    //         pricePerNight: '₩137,000',
-    //         total: '₩1,050,000',
-    //         liked: true,
-    //         selected: false,
-    //         images: [
-    //             signiel1,
-    //             signiel2,
-    //             signiel3,
-    //         ]
-    //     },
-    //     {
-    //         id: 3,
-    //         hotel: '그랜드 조선 부산',
-    //         location: '해운대',
-    //         rating: '9.3',
-    //         discount: '18%',
-    //         pricePerNight: '₩155,000',
-    //         total: '₩920,000',
-    //         liked: true,
-    //         selected: false,
-    //         images: [
-    //             grand1,
-    //             grand2,
-    //             grand3,
-    //         ]
-    //     },
-    // ]);
 
     useEffect(() => {
         if (!user.username) {
