@@ -33,10 +33,11 @@ const MyPage = () => {
   }, [user]);
 
   useEffect(() => {
-    console.log('📌 현재 사용자 ID:', user.userID); // 추가
+    console.log('📌 현재 사용자 ID:', user.userID); // 이미 있는 로그
+
     if (!user.userID) return;
 
-    fetch(`http://localhost:8080/api/payment/user/${user.userID}`, {
+    fetch(`http://localhost:8080/api/payment/user/${user.userID}/details`, {
       credentials: 'include',
     })
       .then(res => {
@@ -44,7 +45,7 @@ const MyPage = () => {
         return res.json();
       })
       .then(data => {
-        console.log("🔍 유저별 결제 데이터:", data);
+        console.log("🔍 전체 응답 구조:", JSON.stringify(data, null, 2));
         setPayments(Array.isArray(data) ? data : []);
       })
       .catch(err => {
@@ -61,9 +62,29 @@ const MyPage = () => {
   const navigate = useNavigate();
   const reservationRef = useRef(null);
   const [isPasswordEditing, setIsPasswordEditing] = useState(false);
+
   const [payments, setPayments] = useState([]);
 
   const closeShareModal = () => setIsShareModalOpen(false);
+
+  // 삭제 함수
+  const handleCancel = async (paymentId) => {
+    try {
+      const res = await fetch(`http://localhost:8080/api/payment/${paymentId}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error('삭제 실패');
+
+      // ✅ 상태 업데이트: 삭제된 항목 payments 배열에서도 제거
+      setPayments((prev) => prev.filter(p => p.paymentID !== paymentId));
+
+      alert('예약이 취소되었습니다.');
+    } catch (err) {
+      console.error("❌ 예약취소 오류:", err);
+      console.log("삭제 시도 paymentId:", paymentId);
+      alert('예약 취소 중 오류가 발생했습니다.');
+    }
+  };
 
   // 모달 캡쳐 복사 기능
   const handleCaptureAndCopy = async () => {
@@ -220,33 +241,36 @@ const MyPage = () => {
         payments.map(pay => (
           <div key={pay.paymentID} className={styles.reservationCard}>
             <img src={h1} alt="호텔 이미지" />
-            <div className={styles.reservationInfo}>
+            <div className={styles.reservationInfo} ref={reservationRef}>
               <div className={styles.sb}>
-                <h3>{pay.hotelName}</h3>
-                <p>예약자 성함: {user.username}</p>
+                <h3 className={styles.hotelName}>{pay.hotelName}</h3>
+                <p className={styles.reserverName}>예약자: {user.username}</p>
               </div>
+
               <div className={styles.sb}>
-                <p>{pay.hotelAddress}</p>
+                <p className={styles.roomName}>객실명: {pay.roomName}</p>
+                <p className={styles.payDate}>결제일자: {pay.pay_date?.slice(0, 10)}</p>
+              </div>
+
+              <div className={styles.sb}>
+                <p>결제수단: {pay.payment_method}</p>
+                <p>결제상태: {pay.payment_status}</p>
+              </div>
+
+              <div className={styles.sb}>
                 <p>결제 금액: ₩{Number(pay.amount).toLocaleString()}</p>
               </div>
-              <div className={styles.sb}>
-                <p>결제일자</p>
-                <p>{pay.pay_date?.slice(0, 10)}</p>
-              </div>
-              <div className={styles.sb}>
-                <p>결제상태: {pay.payment_status}</p>
-                <p>결제수단: {pay.payment_method}</p>
+
+              {/* ✅ 버튼: 우측 하단 고정 */}
+              <div className={styles.cardButtons}>
+                <button onClick={openShareModal}>공유하기</button>
+                <button>결제내역</button>
+                <button onClick={() => handleCancel(pay.paymentID)}>예약취소</button>
               </div>
             </div>
           </div>
         ))
       )}
-
-      <div className={styles.reservationButtons}>
-        <button onClick={openShareModal}>공유하기</button>
-        <button>결제내역</button>
-        <button>예약취소</button>
-      </div>
 
       <div className={styles.divider}></div>
 
@@ -293,14 +317,20 @@ const MyPage = () => {
           </label>
         </div>
 
-        <div className={styles.halfGroup}>
-          <label>전화번호
-            <input type="text" name="punNumber" value={editableUser.punNumber} onChange={handleChange} className="full-width" />
-          </label>
-        </div>
+        <div className={styles.inlineGroup}>
+          <div className={styles.halfGroup}>
+            <label>전화번호
+              <input
+                type="text"
+                name="punNumber"
+                value={editableUser.punNumber}
+                onChange={handleChange}
+                className="full-width"
+              />
+            </label>
+          </div>
 
-        <div className={styles.reservationButtons}>
-          <button type="submit">수정하기</button>
+          <button type="submit" className={styles.submitBtn}>수정하기</button>
         </div>
       </form>
 

@@ -26,7 +26,8 @@
 }
 
 .h4 {
-    margin-left: 4rem;;
+    margin-left: 4rem;
+    ;
     font-size: 18px;
     color: #4b4b4b;
     font-weight: 400;
@@ -43,7 +44,7 @@
     border-radius: 1rem;
     display: flex;
     overflow: hidden;
-    margin-bottom: 1rem;    
+    margin-bottom: 1rem;
 }
 
 .reservationCard img {
@@ -58,23 +59,28 @@
 .reservationInfo {
     padding: 1.5rem;
     flex: 1;
+    position: relative;
 }
 
-.reservationButtons {
+.cardButtons {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
     display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 1rem;
-    margin-right: 4rem;
-    margin-bottom: 1rem;
+    gap: 8px;
 }
 
-.reservationButtons button {
+.cardButtons button {
     padding: 0.5rem 1rem;
     border: 1px solid #ccc;
     background-color: #fff;
     cursor: pointer;
     border-radius: 0.5rem;
+}
+
+.noReservation {
+    padding: 1rem;
+    margin-left: 6rem;
 }
 
 .form {
@@ -96,7 +102,7 @@
     border: 1px solid #ccc;
     border-radius: 0.5rem;
     font-size: 1rem;
-    
+
 }
 
 .form .full-width {
@@ -117,7 +123,7 @@
     margin-bottom: 0.5rem;
     margin-left: 2rem;
     margin-right: 2rem;
-    
+
 }
 
 .halfGroup {
@@ -129,63 +135,101 @@
     flex-direction: column;
 }
 
+.phoneInput {
+    margin-bottom: 25px;
+    /* 전화번호 아래만 넓은 여백 */
+}
+
 .sb {
     display: flex;
     justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.hotelName {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.reserverName {
+    font-size: 1rem;
+    text-align: right;
+}
+
+.roomName,
+.payDate {
+    font-size: 1rem;
 }
 
 .hello {
     margin-left: 2.5rem;
 }
 
+.inlineGroup {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.submitBtn {
+    padding: 0.5rem 1.2rem;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    white-space: nowrap;
+    margin-right: 4rem;
+}
+
 .overlay {
-  background-color: rgba(0, 0, 0, 0.5);
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
+    background-color: rgba(0, 0, 0, 0.5);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
 }
 
 .modal {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 1200px;
-  text-align: center;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 1200px;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
 }
 
 .copyBtn,
 .closeBtn {
-  margin: 0.5rem;
-  padding: 0.6rem 1.2rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
+    margin: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
 }
 
 .copyBtn {
-  background-color: #007bff;
-  color: white;
+    background-color: #007bff;
+    color: white;
 }
 
 .closeBtn {
-  background-color: #ccc;
+    background-color: #ccc;
 }
 
 .previewBox {
-  margin: 1rem 0;
-  text-align: center;
+    margin: 1rem 0;
+    text-align: center;
 }
 
 .previewImage {
-  max-width: 100%;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+    max-width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 8px;
 }
