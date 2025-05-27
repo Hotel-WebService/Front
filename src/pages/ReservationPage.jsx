@@ -52,6 +52,12 @@ const ReservationPage = () => {
     const [bookingPeople, setBookingPeople] = useState(people); // 인원체크 추가
 
     const [selectedPG, setSelectedPG] = useState("kakaopay.TC0ONETIME"); // 결제 초기값, 백엔드추가
+    
+    const [myReservations, setMyReservations] = useState([]);
+    const [selectedReservationID, setSelectedReservationID] = useState("");
+    
+    const [reviewslist, setReviewslist] = useState([]);
+
     // 결제사(PG) 코드 목록
     const PG_CODES = [
         { label: "카카오페이", value: "kakaopay.TC0ONETIME" }, // 테스트용 코드
@@ -151,52 +157,95 @@ const ReservationPage = () => {
         });
     };
 
+    useEffect(() => {
+        if (user.userID && id) {
+            fetch(`http://localhost:8080/api/reservation/my?hotelID=${id}`, {
+                credentials: "include"
+            })
+                .then(res => {
+                    if (!res.ok) {
+                        // 상세 정보 찍기!
+                        console.error("예약 목록 API 실패", res.status, res.statusText);
+                        throw new Error("예약 목록 불러오기 실패");
+                    }
+                    return res.json();
+                })
+                .then(data => setMyReservations(data))
+                .catch(err => {
+                    // 에러 객체와 메시지 모두 출력
+                    console.error("예약목록 불러오기 에러", err);
+                });
+        }
+    }, [user.userID, id]);
+
+    // 호텔별 리뷰 불러오기 (호텔 id가 바뀔 때마다)
+    useEffect(() => {
+        if (!id) return;
+        fetch(`http://localhost:8080/api/reviews/hotel/${id}`, {
+            credentials: 'include'
+        })
+            .then(res => {
+                if (!res.ok) throw new Error('리뷰 목록 불러오기 실패');
+                return res.json();
+            })
+            .then(data => setReviews(data))
+            .catch(err => {
+                console.error('리뷰 목록 불러오기 에러:', err);
+            });
+    }, [id]);
+
+    // ⭐ 리뷰 등록 함수 (예약ID 포함)
     const handleAddReview = () => {
         if (newReview.trim() === "") return;
+        if (!selectedReservationID) {
+            alert("리뷰를 작성할 예약을 선택하세요!");
+            return;
+        }
+
+        const selectedReservation = myReservations.find(r => r.reservationID === Number(selectedReservationID));
+        if (!selectedReservation) {
+            alert("예약 정보를 찾을 수 없습니다.");
+            return;
+        }
 
         const review = {
-            hotelId: id, // 서버에서 hotelId가 필요하다면 포함
-            user: user.username || "익명",
-            date: new Date().toISOString().split("T")[0],
-            content: `${newScore}/10 ${newReview}`,
-            score: newScore
+            hotelID: Number(id),                 // DB 컬럼에 맞춰서
+            userID: user.userID,
+            reservationID: selectedReservation.reservationID,
+            rating: newScore,
+            comment: newReview,
+            // commentDate는 백엔드에서 자동 입력
         };
 
-        // 1. 로컬 상태 업데이트
-        setReviews(prev => [review, ...prev]);
-        setNewReview("");
-        setNewScore(10);
+        console.log("저장할 리뷰 데이터:", review);
 
-        // 2. 서버에 저장 요청
         fetch("http://localhost:8080/api/reviews", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
-            body: JSON.stringify(review), // ✅ 배열이 아니라 하나의 리뷰 객체
+            body: JSON.stringify(review),
         })
             .then(res => {
                 if (!res.ok) throw new Error("리뷰 저장 실패");
                 return res.json();
             })
             .then(data => {
-                console.log("리뷰 저장 완료:", data);
+                alert("리뷰가 등록되었습니다!");
+                setNewReview("");
+                setNewScore(10);
+                setSelectedReservationID("");
+                // 리뷰 새로고침
+                fetch(`http://localhost:8080/api/reviews/hotel/${id}`, {
+                    credentials: 'include'
+                })
+                    .then(res => res.json())
+                    .then(data => setReviews(data));
             })
             .catch(err => {
-                console.error("리뷰 저장 오류:", err);
+                alert("리뷰 저장 오류: " + err.message);
             });
     };
 
-    useEffect(() => {
-        fetch(`http://localhost:8080/api/reviews/hotel/${id}`, {
-            credentials: 'include'
-        })
-            .then(res => {
-                if (!res.ok) throw new Error("리뷰 불러오기 실패");
-                return res.json();
-            })
-            .then(data => setReviews(data))
-            .catch(console.error);
-    }, [id]);
 
     const averageScore = reviews.length
         ? (reviews.reduce((sum, r) => sum + (r.score || 0), 0) / reviews.length).toFixed(1)
@@ -538,10 +587,10 @@ const ReservationPage = () => {
                                 className={styles.mapContainer}
                             />
                             <div className={styles.mapAddress}>
-                                해운대구 해운대해변로 296, 부산광역시, 부산광역시, 612-010<br />
+                                 {hotel?.address} <br />
                                 <a
                                     className={styles.mapLink}
-                                    href="https://www.google.com/maps?q=해운대구 해운대해변로 296"
+                                    href={hotel ? `https://www.google.com/maps?q=${encodeURIComponent(hotel.address)}` : "#"}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                 >
@@ -652,6 +701,22 @@ const ReservationPage = () => {
                         ))}
                     </select>
                 </div>
+                {/* 예약 선택 드롭다운 */}
+                <div style={{ marginTop: "1rem" }}>
+                    <label htmlFor="reservationSelect">리뷰 쓸 예약 선택: </label>
+                    <select
+                        id="reservationSelect"
+                        value={selectedReservationID}
+                        onChange={e => setSelectedReservationID(e.target.value)}
+                    >
+                        <option value="">예약 선택</option>
+                        {myReservations.map(res => (
+                            <option key={res.reservationID} value={res.reservationID}>
+                                #{res.reservationID} - {res.check_in_date}~{res.check_out_date}
+                            </option>
+                        ))}
+                    </select>
+                </div>
                 <textarea
                     className={styles.reviewInput}
                     placeholder="리뷰를 작성하세요"
@@ -664,9 +729,9 @@ const ReservationPage = () => {
                 <button className={styles.reserveBtn} onClick={handleAddReview}>등록하기</button>
 
                 {(showAllReviews ? reviews : reviews.slice(0, 3)).map(r => (
-                    <div key={r.id} className={styles.review}>
-                        <p>{r.content}</p>
-                        <div className={styles.reviewMeta}>{r.user} · {r.date}</div>
+                    <div key={r.reviewID} className={styles.review}>
+                        <p>{r.rating}/10 {r.comment}</p>
+                        <div className={styles.reviewMeta}>UserID: {r.userID} · {r.commentDate && r.commentDate.split('T')[0]}</div>
                     </div>
                 ))}
 

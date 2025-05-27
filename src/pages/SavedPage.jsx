@@ -130,7 +130,7 @@ const SavedPage = () => {
                                         <div className={styles.cardBottom}>
                                             <div className={styles.rating}>★ {item.rating}</div>
                                             <div className={styles.priceInfo}>
-                                                <span className={styles.badgeDiscount}>-{item.discount}</span>
+                                                
                                                 <p className={styles.perNight}>1박 요금 {item.pricePerNight}</p>
                                                 <p className={styles.total}>{item.total}</p>
                                             </div>
