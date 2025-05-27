@@ -72,12 +72,12 @@
 
 /* 카드 */
 .card {
-  flex: 1;
-  display: flex;
-  background: #fff;
-  border: 2px solid #ccc;
-  border-radius: 8px;
-  overflow: hidden;
+    flex: 1;
+    display: flex;
+    background: #fff;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 
@@ -87,10 +87,10 @@
 }
 
 .cardWrapper {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 1rem;
 }
 
 .cardImg {
@@ -106,6 +106,13 @@
     padding: 16px 24px;
 }
 
+.cardLink {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    /* 링크가 전체 카드 박스를 감쌀 수 있게 */
+}
+
 /* 상단: 호텔명 + 일정버튼 */
 .cardTop {
     display: flex;
@@ -114,11 +121,22 @@
     margin-bottom: 4px;
 }
 
+.unlikeBtn {
+    padding: 6px 12px;
+    font-size: 12px;
+    background: #40c9c9;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+}
+
 .checkbox {
-  margin-top: 7rem; /* 카드보다 살짝 위에 맞추기 */
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
+    margin-top: 7rem;
+    /* 카드보다 살짝 위에 맞추기 */
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
 }
 
 .hotelName {

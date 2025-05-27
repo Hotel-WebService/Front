@@ -227,6 +227,11 @@
     margin-top: 1px;
 }
 
+.starVisual {
+    font-size: 1.2rem;
+    color: rgb(0, 0, 0);
+    margin-top: -0.5rem;
+}
 
 .stars {
     margin-top: 1px;

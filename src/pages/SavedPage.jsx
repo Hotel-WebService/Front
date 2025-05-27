@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setUserInfo } from '../features/userSlice';
 import styles from '../css/SavedPage.module.css';
 import { Swiper, SwiperSlide } from 'swiper/react';
+import { toggleLike } from '../features/likedHotelsSlice';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import { Navigation } from 'swiper/modules';
@@ -82,50 +83,62 @@ const SavedPage = () => {
                     <div className={styles.emptyBox}>찜한 호텔이 없습니다.</div>
                 ) : (
                     likedHotels.map(item => (
-                        <div key={item.id} className={styles.cardWrapper}>
-                            <div className={styles.card}>
-                                <div className={styles.imageGroup}>
-                                    <Swiper
-                                        modules={[Navigation]}
-                                        navigation
-                                        spaceBetween={10}
-                                        slidesPerView={1}
-                                        className={styles.cardSlider}
-                                    >
-                                        {item.images.map((imgSrc, index) => (
-                                            <SwiperSlide key={index}>
-                                                <img
-                                                    className={styles.cardImg}
-                                                    src={imgSrc}
-                                                    alt={`호텔 이미지 ${index + 1}`}
-                                                />
-                                            </SwiperSlide>
-                                        ))}
-                                    </Swiper>
-                                </div>
-                                <div className={styles.cardInfo}>
-                                    <div className={styles.cardTop}>
-                                        <h3 className={styles.hotelName}>{item.name}</h3>
-                                    </div>
-                                    <div className={styles.cardMiddle}>
-                                        <p className={styles.location}>{item.location}</p>
-                                        <div className={styles.facilities}>
-                                            {item.facilities.map((f, i) => (
-                                                <span key={i}>{f}</span>
+                        <Link to={`/reservation/${item.id}`} className={styles.cardLink} key={item.id}>
+                            <div className={styles.cardWrapper}>
+                                <div className={styles.card}>
+                                    <div className={styles.imageGroup}>
+                                        <Swiper
+                                            modules={[Navigation]}
+                                            navigation
+                                            spaceBetween={10}
+                                            slidesPerView={1}
+                                            className={styles.cardSlider}
+                                        >
+                                            {item.images.map((imgSrc, index) => (
+                                                <SwiperSlide key={index}>
+                                                    <img
+                                                        className={styles.cardImg}
+                                                        src={imgSrc}
+                                                        alt={`호텔 이미지 ${index + 1}`}
+                                                    />
+                                                </SwiperSlide>
                                             ))}
-                                        </div>
+                                        </Swiper>
                                     </div>
-                                    <div className={styles.cardBottom}>
-                                        <div className={styles.rating}>★ {item.rating}</div>
-                                        <div className={styles.priceInfo}>
-                                            <span className={styles.badgeDiscount}>-{item.discount}</span>
-                                            <p className={styles.perNight}>1박 요금 {item.pricePerNight}</p>
-                                            <p className={styles.total}>{item.total}</p>
+                                    <div className={styles.cardInfo}>
+                                        <div className={styles.cardTop}>
+                                            <h3 className={styles.hotelName}>{item.name}</h3>
+                                            <button
+                                                className={styles.unlikeBtn}
+                                                onClick={(e) => {
+                                                    e.preventDefault();       // 링크 이동 막기
+                                                    e.stopPropagation();      // 이벤트 버블링 방지
+                                                    dispatch(toggleLike(item));
+                                                }}
+                                            >
+                                                찜해제
+                                            </button>
+                                        </div>
+                                        <div className={styles.cardMiddle}>
+                                            <p className={styles.location}>{item.location}</p>
+                                            <div className={styles.facilities}>
+                                                {item.facilities.map((f, i) => (
+                                                    <span key={i}>{f}</span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className={styles.cardBottom}>
+                                            <div className={styles.rating}>★ {item.rating}</div>
+                                            <div className={styles.priceInfo}>
+                                                <span className={styles.badgeDiscount}>-{item.discount}</span>
+                                                <p className={styles.perNight}>1박 요금 {item.pricePerNight}</p>
+                                                <p className={styles.total}>{item.total}</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </Link>
                     ))
                 )}
 
@@ -135,7 +148,7 @@ const SavedPage = () => {
             </div>
 
             {/* Footer */}
-            <footer>
+            < footer >
                 <div className="footer-top">
                     <div className="footer-section">
                         <div className="footer-logo">Stay Manager</div>

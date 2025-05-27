@@ -206,7 +206,7 @@
 }
 
 .sortSection {
-    margin-right: 7rem;
+    margin-bottom: 0.5rem;
     display: flex;
     justify-content: flex-end;
     padding: 0 1rem;
@@ -244,7 +244,7 @@
 
 .cardLink {
     text-decoration: none;
-    color:#000000;
+    color: #000000;
 }
 
 .imageGroup {
@@ -335,6 +335,12 @@
     border-radius: 4px;
     padding: 4px 8px;
     display: inline-block;
+}
+
+.starVisual {
+    font-size: 18px;
+    color: gold;
+    margin-top: 4px;
 }
 
 .priceInfo {

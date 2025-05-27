@@ -10,6 +10,7 @@ import styles from '../css/ReservationPage.module.css';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { setUserInfo } from '../features/userSlice';
+import { useNavigate } from "react-router-dom";
 
 // 이미지
 import instargram from '../assets/icon/instargram.jpg';
@@ -45,6 +46,10 @@ const ReservationPage = () => {
     const [guestName, setGuestName] = useState("");
     const [guestEmail, setGuestEmail] = useState("");
     const [guestPhone, setGuestPhone] = useState("");
+    const [isAuthenticated, setIsAuthenticated] = useState(true);
+    const navigate = useNavigate(); // 로그아웃추가
+
+    const [bookingPeople, setBookingPeople] = useState(people); // 인원체크 추가
 
     const [selectedPG, setSelectedPG] = useState("kakaopay.TC0ONETIME"); // 결제 초기값, 백엔드추가
     // 결제사(PG) 코드 목록
@@ -53,6 +58,11 @@ const ReservationPage = () => {
         { label: "헥토파이낸셜(신용카드)", value: "settle.portone1" },
         // 필요시 다른 결제사도 추가 가능
     ];
+
+    const formatDate = date =>
+        date
+            ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+            : null;
 
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     Modal.setAppElement('#root');
@@ -125,6 +135,10 @@ const ReservationPage = () => {
 
     // 지도 그려주는 헬퍼
     const drawMap = ({ latitude, longitude }) => {
+        if (!(window.kakao && window.kakao.maps && window.kakao.maps.LatLng)) {
+            // 아직 로드 안 됐으면 그냥 종료(또는 재시도/메시지)
+            return;
+        }
         const container = mapRef.current;
         const options = {
             center: new window.kakao.maps.LatLng(latitude, longitude),
@@ -194,6 +208,7 @@ const ReservationPage = () => {
         specs: [room.room_description],
         price: room.price,
         image: courtyardRoom1,
+        capacity: room.capacity,
     }));
 
     const imageList = [
@@ -207,6 +222,7 @@ const ReservationPage = () => {
     const openBookingModal = (room) => {
         setSelectedRoom(room);
         setIsBookingModalOpen(true);
+        console.log("선택된 방 정보:", room);
     };
 
     const closeBookingModal = () => {
@@ -217,6 +233,32 @@ const ReservationPage = () => {
     };
 
     const handlePayment = () => {
+        if (!user.userID) {
+            alert("로그인이 필요합니다!");
+            return;
+        }
+        if (!selectedRoom) {
+            alert("객실을 선택하세요!");
+            return;
+        }
+        if (!startDate || !endDate) {
+            alert("입실일/퇴실일을 선택하세요.");
+            return;
+        }
+        // [2] 입실일이 오늘보다 이전이면 예약 불가
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // 시간 00시로 맞춰 비교
+        if (startDate < today) {
+            alert("입실일은 오늘 날짜 이후만 선택 가능합니다.");
+            return;
+        }
+        // [3] 선택한 인원 > 객실 가용 인원
+
+        if (people > selectedRoom.capacity || bookingPeople > selectedRoom.capacity) {
+            alert(`이 객실의 최대 인원은 ${selectedRoom.capacity}명입니다.`);
+            return;
+        }
+
         if (!window.IMP) {
             alert("결제 모듈이 로드되지 않았습니다.");
             return;
@@ -248,6 +290,7 @@ const ReservationPage = () => {
                         .then((data) => {
                             alert("결제 성공 및 검증 완료");
                             // data로 추가 처리 가능
+                            handleReservationAndPayment();
                             closeBookingModal();
                         })
                         .catch(() => {
@@ -258,6 +301,63 @@ const ReservationPage = () => {
                 }
             }
         );
+    };
+
+    const handleReservationAndPayment = async () => {
+        console.log("user 객체 구조:", user);
+
+        // 1. 예약 데이터
+        const reservationData = {
+            userID: user.userID,
+            roomID: selectedRoom.id,
+            check_in_date: formatDate(startDate),
+            check_out_date: formatDate(endDate),
+            // status, reservationDate는 백엔드에서 자동
+        };
+        // 2. 결제 데이터
+        const paymentData = {
+            amount: selectedRoom.price,
+            payment_method: selectedPG,
+            payment_status: "완료",
+            // pay_date는 백엔드에서 자동
+        };
+
+        // 3. 콘솔에 데이터 확인
+        console.log("저장할 예약 데이터:", reservationData);
+        // reservationData의 각 필드가 제대로 나오는지 확인
+        console.log("저장할 결제 데이터:", paymentData);
+
+        try {
+            // 예약 저장 요청
+            const res = await fetch("http://localhost:8080/api/reservation", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(reservationData)
+            });
+            const reservation = await res.json();
+
+            console.log("예약 저장 결과(응답):", reservation);
+
+            // 결제 저장 요청
+            const payRes = await fetch("http://localhost:8080/api/payment", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    ...paymentData,
+                    reservationID: reservation.reservationID
+                })
+            });
+            const paymentResult = await payRes.json();
+
+            console.log("결제 저장 결과(응답):", paymentResult);
+
+            alert("예약 및 결제 완료!");
+            // 이후 이동/상태변경 등 추가 처리
+
+        } catch (err) {
+            alert("예약 또는 결제 저장에 실패했습니다.");
+            console.error(err);
+        }
     };
 
     useEffect(() => {
@@ -271,6 +371,7 @@ const ReservationPage = () => {
             })
             .then(data => {
                 dispatch(setUserInfo({
+                    userID: data.userID,
                     username: data.name,
                     email: data.email,
                     loginID: data.loginID,
@@ -290,6 +391,20 @@ const ReservationPage = () => {
     }, [id]);
 
     //  if (!rhotel) return <div>로딩중...</div>;
+
+    // 백엔드 로그아웃 추가
+    const handleLogout = async () => {
+        try {
+            await fetch('http://localhost:8080/logout', {
+                method: 'POST',
+                credentials: 'include'
+            });
+            setIsAuthenticated(false);
+            navigate('/');  // 로그아웃 후 홈으로
+        } catch (e) {
+            console.error('로그아웃 실패', e);
+        }
+    };
 
     return (
         <div>
@@ -389,7 +504,14 @@ const ReservationPage = () => {
                         <div className={styles.hotelTitle}>호텔 정보를 불러오는 중...</div>
                     )}
 
-                    <div className={styles.stars}>★★★★★</div>
+                    <div className={styles.starVisual}>
+                        {
+                            (() => {
+                                const starNum = parseInt(hotel?.star.replace('성', '') || '0', 10);
+                                return '★'.repeat(starNum) + '☆'.repeat(5 - starNum);
+                            })()
+                        }
+                    </div>
                     <div className={styles.facilities}>
                         <div className={styles.serviceInfo}>시설/서비스 요약 정보</div>
                     </div>
@@ -461,7 +583,8 @@ const ReservationPage = () => {
                     <input
                         type="number"
                         min="1"
-                        placeholder="1"
+                        value={bookingPeople}
+                        onChange={e => setBookingPeople(Number(e.target.value))}
                         className={styles.dateInput}
                     />
                 </div>

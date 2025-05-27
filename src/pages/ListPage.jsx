@@ -116,7 +116,8 @@ const ListPage = () => {
         '수영장',
         '조식제공',
         hotel.parking_lot ? '주차시설' : null,
-      ].filter(Boolean)
+      ].filter(Boolean),
+      star: hotel.star,
     };
   });
 
@@ -135,7 +136,7 @@ const ListPage = () => {
       hotel.facilities.includes(service)
     );
 
-    const starMatch = filters.star ? hotel.rating[0] === filters.star : true;
+    const starMatch = filters.star ? hotel.star === filters.star : true;
 
     const price = parseInt(hotel.pricePerNight.replace(/[₩,]/g, ''));
     const priceMatch = price <= filters.price;
@@ -292,7 +293,6 @@ const ListPage = () => {
           placeholderText="날짜 선택"
           dateFormat="yyyy/MM/dd"
           locale={ko}
-
         />
 
         <input
@@ -332,11 +332,35 @@ const ListPage = () => {
             <div className={styles.filteringTitle}>
               <h5>시설 등급</h5>
               <ul>
-                <li><label><input type="radio" name="star" />5성</label></li>
-                <li><label><input type="radio" name="star" />4성</label></li>
-                <li><label><input type="radio" name="star" />3성</label></li>
-                <li><label><input type="radio" name="star" />2성</label></li>
-                <li><label><input type="radio" name="star" />1성</label></li>
+                {[5, 4, 3, 2, 1].map(star => {
+                  const label = `${star}성`;
+                  return (
+                    <li key={star}>
+                      <label>
+                        <input
+                          type="radio"
+                          name="star"
+                          value={label}
+                          checked={filters.star === label}
+                          onChange={(e) => dispatch(setFilters({ star: e.target.value }))}
+                        />
+                        {label}
+                      </label>
+                    </li>
+                  );
+                })}
+                <li>
+                  <label>
+                    <input
+                      type="radio"
+                      name="star"
+                      value=""
+                      checked={!filters.star}
+                      onChange={() => dispatch(setFilters({ star: null }))}
+                    />
+                    전체
+                  </label>
+                </li>
               </ul>
             </div>
           </div>
@@ -418,7 +442,14 @@ const ListPage = () => {
                       <div className={styles.cardBottom}>
                         <div className={styles.rating}>★ {item.rating}</div>
                         <div className={styles.priceInfo}>
-                          <span className={styles.badgeDiscount}>-{item.discount}</span>
+                          <div className={styles.starVisual}>
+                            {
+                              (() => {
+                                const starNum = parseInt(item.star?.replace('성', '') || '0', 10);
+                                return '★'.repeat(starNum) + '☆'.repeat(5 - starNum);
+                              })()
+                            }
+                          </div>
                           <p className={styles.perNight}>1박 요금 {item.pricePerNight}</p>
                           <p className={styles.total}>{item.total}</p>
                         </div>
