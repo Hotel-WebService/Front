@@ -32,6 +32,27 @@ const MyPage = () => {
     });
   }, [user]);
 
+  useEffect(() => {
+    console.log('📌 현재 사용자 ID:', user.userID); // 추가
+    if (!user.userID) return;
+
+    fetch(`http://localhost:8080/api/payment/user/${user.userID}`, {
+      credentials: 'include',
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('결제 내역 불러오기 실패');
+        return res.json();
+      })
+      .then(data => {
+        console.log("🔍 유저별 결제 데이터:", data);
+        setPayments(Array.isArray(data) ? data : []);
+      })
+      .catch(err => {
+        console.error("결제 내역 오류:", err);
+        setPayments([]);
+      });
+  }, [user.userID]);
+
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
   Modal.setAppElement('#root');
@@ -40,6 +61,7 @@ const MyPage = () => {
   const navigate = useNavigate();
   const reservationRef = useRef(null);
   const [isPasswordEditing, setIsPasswordEditing] = useState(false);
+  const [payments, setPayments] = useState([]);
 
   const closeShareModal = () => setIsShareModalOpen(false);
 
@@ -103,6 +125,7 @@ const MyPage = () => {
       })
       .then(data => {
         dispatch(setUserInfo({
+          userID: data.userID,
           username: data.name,
           email: data.email,
           loginID: data.loginID,
@@ -190,27 +213,34 @@ const MyPage = () => {
       <div className={styles.divider}></div>
 
       <h2 className={styles.h2}>나의 예약현황</h2>
-      <div className={styles.reservationCard} ref={reservationRef}>
-        <img style={{ backgroundImage: `url(${h1})` }} />
-        <div className={styles.reservationInfo}>
-          <div className={styles.sb}>
-            <h3>시그니엘 부산</h3>
-            <p>예약자 성함 : OOO</p>
+
+      {payments.length === 0 ? (
+        <p className={styles.noReservation}>결제된 예약이 없습니다.</p>
+      ) : (
+        payments.map(pay => (
+          <div key={pay.paymentID} className={styles.reservationCard}>
+            <img src={h1} alt="호텔 이미지" />
+            <div className={styles.reservationInfo}>
+              <div className={styles.sb}>
+                <h3>{pay.hotelName}</h3>
+                <p>예약자 성함: {user.username}</p>
+              </div>
+              <div className={styles.sb}>
+                <p>{pay.hotelAddress}</p>
+                <p>결제 금액: ₩{Number(pay.amount).toLocaleString()}</p>
+              </div>
+              <div className={styles.sb}>
+                <p>결제일자</p>
+                <p>{pay.pay_date?.slice(0, 10)}</p>
+              </div>
+              <div className={styles.sb}>
+                <p>결제상태: {pay.payment_status}</p>
+                <p>결제수단: {pay.payment_method}</p>
+              </div>
+            </div>
           </div>
-          <div className={styles.sb}>
-            <p style={{ marginBottom: '9.5rem' }}>해운대</p>
-            <p>객실 : 트윈베드 오션뷰 (2인)</p>
-          </div>
-          <div className={styles.sb}>
-            <p>예약일자</p>
-            <p>체크인 시간 : 14:00</p>
-          </div>
-          <div className={styles.sb}>
-            <p>5월 1일 ~ 5월 7일</p>
-            <p>체크아웃 시간 : 10:00</p>
-          </div>
-        </div>
-      </div>
+        ))
+      )}
 
       <div className={styles.reservationButtons}>
         <button onClick={openShareModal}>공유하기</button>

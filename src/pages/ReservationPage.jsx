@@ -344,7 +344,8 @@ const ReservationPage = () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     ...paymentData,
-                    reservationID: reservation.reservationID
+                    reservationID: reservation.reservationID,
+                    userID: user.userID
                 })
             });
             const paymentResult = await payRes.json();
