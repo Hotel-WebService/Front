@@ -52,10 +52,10 @@ const ReservationPage = () => {
     const [bookingPeople, setBookingPeople] = useState(people); // 인원체크 추가
 
     const [selectedPG, setSelectedPG] = useState("kakaopay.TC0ONETIME"); // 결제 초기값, 백엔드추가
-    
+
     const [myReservations, setMyReservations] = useState([]);
     const [selectedReservationID, setSelectedReservationID] = useState("");
-    
+
     const [reviewslist, setReviewslist] = useState([]);
 
     // 결제사(PG) 코드 목록
@@ -248,7 +248,7 @@ const ReservationPage = () => {
 
 
     const averageScore = reviews.length
-        ? (reviews.reduce((sum, r) => sum + (r.score || 0), 0) / reviews.length).toFixed(1)
+        ? (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length).toFixed(1)
         : "0.0";
 
     const rooms = rrooms.map(room => ({
@@ -587,7 +587,7 @@ const ReservationPage = () => {
                                 className={styles.mapContainer}
                             />
                             <div className={styles.mapAddress}>
-                                 {hotel?.address} <br />
+                                {hotel?.address} <br />
                                 <a
                                     className={styles.mapLink}
                                     href={hotel ? `https://www.google.com/maps?q=${encodeURIComponent(hotel.address)}` : "#"}
@@ -694,7 +694,8 @@ const ReservationPage = () => {
                         id="score"
                         value={newScore}
                         onChange={(e) => setNewScore(Number(e.target.value))}
-                        style={{ marginLeft: "0.5rem", padding: "4px" }}
+                        style={{ marginLeft: "0.5rem", padding: "4px", width: "4rem" }}
+                        className={styles.reservationID}
                     >
                         {Array.from({ length: 11 }, (_, i) => (
                             <option key={i} value={i}>{i}점</option>
@@ -703,16 +704,17 @@ const ReservationPage = () => {
                 </div>
                 {/* 예약 선택 드롭다운 */}
                 <div style={{ marginTop: "1rem" }}>
-                    <label htmlFor="reservationSelect">리뷰 쓸 예약 선택: </label>
+                    <label htmlFor="reservationSelect">리뷰 쓸 예약 선택 : </label>
                     <select
                         id="reservationSelect"
                         value={selectedReservationID}
                         onChange={e => setSelectedReservationID(e.target.value)}
+                        className={styles.reservationID}
                     >
                         <option value="">예약 선택</option>
                         {myReservations.map(res => (
                             <option key={res.reservationID} value={res.reservationID}>
-                                #{res.reservationID} - {res.check_in_date}~{res.check_out_date}
+                                #{res.reservationID} - {res.check_in_date} ~ {res.check_out_date}
                             </option>
                         ))}
                     </select>
@@ -856,7 +858,7 @@ const ReservationPage = () => {
                     />
                     {/* 결제사 선택 */}
                     <div className={styles.pgSelectBox}>
-                        <label>결제수단: </label>
+                        <label>결제수단 : </label>
                         <select
                             value={selectedPG}
                             onChange={e => setSelectedPG(e.target.value)}

@@ -127,6 +127,7 @@ const FirstPage = () => {
                 popperPlacement="bottom-start"
                 showPopperArrow={false}
                 locale={ko}
+                minDate={new Date()}
               />
             </div>
             <div>
@@ -139,6 +140,7 @@ const FirstPage = () => {
                 popperPlacement="bottom-start"
                 showPopperArrow={false}
                 locale={ko}
+                minDate={new Date()}
               />
             </div>
           </div>

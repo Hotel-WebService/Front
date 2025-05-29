@@ -70,7 +70,8 @@ body .react-datepicker__day-name {
 }
 
 body .react-datepicker__navigation-icon::before {
-  border-color: #ffffff;
+  border-color: #000000;
+  margin-top: 5px;
 }
 
 body .react-datepicker-popper {

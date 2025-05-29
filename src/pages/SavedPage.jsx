@@ -27,6 +27,12 @@ const SavedPage = () => {
     const user = useSelector(state => state.user);
     const dispatch = useDispatch();
     const likedHotels = useSelector(state => state.likedHotels);
+    const [sortOrder, setSortOrder] = useState('oldest');
+
+    const sortedLikedHotels =
+        sortOrder === 'recent'
+            ? [...likedHotels].slice().reverse()
+            : [...likedHotels];
 
     useEffect(() => {
         if (!user.username) {
@@ -74,7 +80,17 @@ const SavedPage = () => {
                         <span className={styles.icon}>▶</span>
                         <span>찜한 목록</span>
                     </div>
-                    <button className={styles.filterBtn}>필터링 : 지역 - 부산</button>
+                    <div className={styles.sortBox}>
+                        <select
+                            id="sortOrder"
+                            value={sortOrder}
+                            onChange={(e) => setSortOrder(e.target.value)}
+                            className={styles.sortSelect}
+                        >
+                            <option value="recent">최신 순</option>
+                            <option value="oldest">오래된 순</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div className={styles.divider}></div>
@@ -82,7 +98,7 @@ const SavedPage = () => {
                 {likedHotels.length === 0 ? (
                     <div className={styles.emptyBox}>찜한 호텔이 없습니다.</div>
                 ) : (
-                    likedHotels.map(item => (
+                    sortedLikedHotels.map(item => (
                         <Link to={`/reservation/${item.id}`} className={styles.cardLink} key={item.id}>
                             <div className={styles.cardWrapper}>
                                 <div className={styles.card}>
@@ -130,7 +146,7 @@ const SavedPage = () => {
                                         <div className={styles.cardBottom}>
                                             <div className={styles.rating}>★ {item.rating}</div>
                                             <div className={styles.priceInfo}>
-                                                
+
                                                 <p className={styles.perNight}>1박 요금 {item.pricePerNight}</p>
                                                 <p className={styles.total}>{item.total}</p>
                                             </div>

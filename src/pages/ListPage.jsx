@@ -94,7 +94,7 @@ const ListPage = () => {
 
     // 평균 점수 계산
     const averageRating = hotelReviews.length
-      ? (hotelReviews.reduce((sum, r) => sum + r.score, 0) / hotelReviews.length).toFixed(1)
+      ? (hotelReviews.reduce((sum, r) => sum + r.rating, 0) / hotelReviews.length).toFixed(1)
       : "0.0";
 
     return {
@@ -233,6 +233,12 @@ const ListPage = () => {
       });
   };
 
+  useEffect(() => {
+    if (destination) {
+      setSearchTriggeredDestination(destination);
+    }
+  }, [destination]);
+
   // 백엔드 로그아웃 추가
   const handleLogout = async () => {
     try {
@@ -293,6 +299,7 @@ const ListPage = () => {
           placeholderText="날짜 선택"
           dateFormat="yyyy/MM/dd"
           locale={ko}
+          minDate={new Date()}
         />
 
         <input
@@ -381,7 +388,6 @@ const ListPage = () => {
         {/* 호텔 카드 리스트 */}
         <section className={styles.content}>
           <div className={styles.sortSection}>
-            <label htmlFor="sort" style={{ marginRight: '8px', fontWeight: '500' }}>정렬 기준:</label>
             <select
               id="sort"
               value={sortOption}
