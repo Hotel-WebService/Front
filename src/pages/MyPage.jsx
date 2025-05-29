@@ -225,7 +225,7 @@ const MyPage = () => {
       {/* Header */}
 
       <section className={styles.welcome}>
-        <h1 className={styles.h1}>MyPage</h1>
+        <h1 className={styles.h2}>MyPage</h1>
         <div className={styles.hello}>
           <h4 className={styles.h4}>{user.username}님, 환영합니다.</h4>
         </div>

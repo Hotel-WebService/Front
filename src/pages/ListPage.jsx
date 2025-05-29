@@ -17,15 +17,9 @@ import HotelList from './HotelList'; // 백엔드 추가
 
 // 이미지
 import search from '../assets/icon/search.jpg';
-import banyanTree1 from '../assets//hotel1/banyanTree1.jpg';
-import banyanTree2 from '../assets/hotel1/banyanTree2.jpg';
-import banyanTree3 from '../assets/hotel1/banyanTree3.jpg';
 import courtyard1 from '../assets/hotel2/courtyard1.jpg';
 import courtyard2 from '../assets/hotel2/courtyard2.jpg';
 import courtyard3 from '../assets/hotel2/courtyard3.jpg';
-import signiel1 from '../assets/hotel3/signiel1.jpg';
-import signiel2 from '../assets/hotel3/signiel2.jpg';
-import signiel3 from '../assets/hotel3/signiel3.jpg';
 import instargram from '../assets/icon/instargram.jpg';
 import facebook from '../assets/icon/facebook.jpg';
 import twitter from '../assets/icon/twitter.jpg';

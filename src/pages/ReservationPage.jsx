@@ -17,15 +17,6 @@ import instargram from '../assets/icon/instargram.jpg';
 import facebook from '../assets/icon/facebook.jpg';
 import twitter from '../assets/icon/twitter.jpg';
 import searchIcon from '../assets/icon/search.jpg';
-import courtyard1 from '../assets/hotel2/courtyard1.jpg';
-import courtyard2 from '../assets/hotel2/courtyard2.jpg';
-import courtyard3 from '../assets/hotel2/courtyard3.jpg';
-import courtyard4 from '../assets/hotel2/courtyard4.jpg';
-import courtyard5 from '../assets/hotel2/courtyard5.jpg';
-import courtyardRoom1 from '../assets/hotel2/courtyardRoom1.jpg';
-import courtyardRoom2 from '../assets/hotel2/courtyardRoom2.jpg';
-import courtyardRoom3 from '../assets/hotel2/courtyardRoom3.jpg';
-
 
 const ReservationPage = () => {
 
@@ -251,21 +242,43 @@ const ReservationPage = () => {
         ? (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length).toFixed(1)
         : "0.0";
 
+    const getRoomImagePath = (hotelId, roomId) => {
+        try {
+            // hotelId, roomId가 문자열이면 parseInt로 정수 변환
+            return require(`../assets/hotel${hotelId}/room${roomId}.jpg`);
+        } catch (e) {
+            // 없는 이미지일 때 기본 이미지 반환
+            return require('../assets/no-image.jpg');
+        }
+    };
+
     const rooms = rrooms.map(room => ({
         id: room.roomID,
         name: room.room_name,
         specs: [room.room_description],
         price: room.price,
-        image: courtyardRoom1,
+        image: getRoomImagePath(id, room.roomID),
         capacity: room.capacity,
     }));
 
-    const imageList = [
-        courtyard1,
-        courtyard2,
-        courtyard3,
-        courtyard4,
-        courtyard5,
+    const getImageList = (hotelId, maxCount = 20) => {
+        const images = [];
+        for (let i = 1; i <= maxCount; i++) {
+            try {
+                const img = require(`../assets/hotel${hotelId}/hotel${i}.jpg`);
+                images.push(img);
+            } catch (e) {
+                break; // 이미지가 없으면 반복 종료
+            }
+        }
+        return images;
+    };
+
+    const imageList = getImageList(id, 5);
+
+     const allGalleryImages = [
+        ...getImageList(id, 5), // hero 이미지들
+        ...rrooms.map(room => getRoomImagePath(id, room.roomID)) // 객실 이미지들
     ];
 
     const openBookingModal = (room) => {
@@ -506,13 +519,13 @@ const ReservationPage = () => {
             <Link to="/listPage" className={styles.backLink}>+ 돌아가기</Link>
 
             <section className={styles.hero}>
-                <div className={styles.big} style={{ backgroundImage: `url(${courtyard1})` }}></div>
-                <div className={styles.thumb1} style={{ backgroundImage: `url(${courtyard2})` }}></div>
-                <div className={styles.thumb2} style={{ backgroundImage: `url(${courtyard3})` }}></div>
-                <div className={styles.thumb3} style={{ backgroundImage: `url(${courtyard4})` }}></div>
-                <div className={styles.thumb4} style={{ backgroundImage: `url(${courtyard5})` }}>
-                    <div className={styles.thumb4} style={{ backgroundImage: `url(${courtyard5})` }} onClick={openGalleryModal}>
-                        <div className={styles.more}>+{imageList.length - 5}</div>
+                <div className={styles.big} style={{ backgroundImage: `url(${imageList[0]})` }}></div>
+                <div className={styles.thumb1} style={{ backgroundImage: `url(${imageList[1]})` }}></div>
+                <div className={styles.thumb2} style={{ backgroundImage: `url(${imageList[2]})` }}></div>
+                <div className={styles.thumb3} style={{ backgroundImage: `url(${imageList[3]})` }}></div>
+                <div className={styles.thumb4} style={{ backgroundImage: `url(${imageList[4]})` }}>
+                    <div className={styles.thumb4} style={{ backgroundImage: `url(${imageList[4]})` }} onClick={openGalleryModal}>
+                        <div className={styles.more}>+{allGalleryImages.length - 5}</div>
                     </div>
                 </div>
             </section>
@@ -791,7 +804,7 @@ const ReservationPage = () => {
             >
                 <h2>전체 사진</h2>
                 <div className={styles.galleryGrid}>
-                    {imageList.map((img, idx) => (
+                    {allGalleryImages.map((img, idx) => (
                         <img key={idx} src={img} alt={`호텔 사진 ${idx + 1}`} className={styles.galleryImg} />
                     ))}
                 </div>
