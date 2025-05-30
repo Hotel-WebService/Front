@@ -17,9 +17,9 @@ import HotelList from './HotelList'; // 백엔드 추가
 
 // 이미지
 import search from '../assets/icon/search.jpg';
-import courtyard1 from '../assets/hotel2/courtyard1.jpg';
-import courtyard2 from '../assets/hotel2/courtyard2.jpg';
-import courtyard3 from '../assets/hotel2/courtyard3.jpg';
+import hotel1 from '../assets/hotel2/hotel1.jpg';
+import hotel2 from '../assets/hotel2/hotel2.jpg';
+import hotel3 from '../assets/hotel2/hotel3.jpg';
 import instargram from '../assets/icon/instargram.jpg';
 import facebook from '../assets/icon/facebook.jpg';
 import twitter from '../assets/icon/twitter.jpg';
@@ -91,11 +91,14 @@ const ListPage = () => {
       ? (hotelReviews.reduce((sum, r) => sum + r.rating, 0) / hotelReviews.length).toFixed(1)
       : "0.0";
 
+    
+
     return {
       id: hotel.hotelID,
       name: hotel.hotelName,
       location: hotel.address,
-      rating: averageRating, // ✅ 여기 실제 평균 평점으로 대체
+      rating: averageRating, //
+      reviewCount: hotelReviews.length,
       discount: '0%',
       pricePerNight: room.find(r => r.hotelID === hotel.hotelID)?.price
         ? `₩${room.find(r => r.hotelID === hotel.hotelID).price.toLocaleString()}`
@@ -104,7 +107,7 @@ const ListPage = () => {
         ? `₩${room.find(r => r.hotelID === hotel.hotelID).price.toLocaleString()}`
         : '가격정보없음',
       liked: false,
-      images: [courtyard1, courtyard2, courtyard3],
+      images: [hotel1, hotel2, hotel3],
       facilities: [
         '호텔',
         '수영장',
@@ -440,7 +443,10 @@ const ListPage = () => {
                         </div>
                       </div>
                       <div className={styles.cardBottom}>
-                        <div className={styles.rating}>★ {item.rating}</div>
+                        <div className={styles.cardLeft}>
+                          <div className={styles.rating}>★ {item.rating}</div>
+                          <div className={styles.reviewCount}>리뷰 {item.reviewCount}개</div>
+                        </div>
                         <div className={styles.priceInfo}>
                           <div className={styles.starVisual}>
                             {

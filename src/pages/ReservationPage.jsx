@@ -19,6 +19,8 @@ import twitter from '../assets/icon/twitter.jpg';
 import searchIcon from '../assets/icon/search.jpg';
 
 const ReservationPage = () => {
+    // Test
+    const [nearbyPlaces, setNearbyPlaces] = useState([]);
 
     const user = useSelector(state => state.user);
     const search = useSelector(state => state.search);

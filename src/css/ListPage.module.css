@@ -287,6 +287,17 @@
     padding: 16px 24px;
 }
 
+.cardLeft {
+    display: flex;
+    gap: 6px;
+}
+
+.reviewCount {
+    font-size: 14px;
+    color: rgb(100, 100, 100);
+    margin-top: 3px;
+}
+
 .cardTop {
     display: flex;
     justify-content: space-between;
