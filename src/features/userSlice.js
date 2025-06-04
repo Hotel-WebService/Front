@@ -18,7 +18,7 @@ const userSlice = createSlice({
             state.username = action.payload;
         },
         setUserInfo(state, action) {
-            const { userID, username, email, loginID, punNumber } = action.payload;
+            const { userID, username, email, loginID, punNumber } = action.payload; // 백엔드추가
             state.userID = userID;
             state.username = username;
             state.email = email;
@@ -33,6 +33,7 @@ const userSlice = createSlice({
         },
         setLogout(state) {
             state.isAuthenticated = false;
+            state.userID = '';
             state.username = '';
             state.email = '';
             state.loginID = '';

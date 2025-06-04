@@ -23,6 +23,31 @@ const MyPage = () => {
     punNumber: ''
   });
 
+  const getRoomImagePath = (hotelId, roomId) => {
+    try {
+      // hotelId, roomId가 문자열이면 정수 변환
+      return require(`../assets/hotel${hotelId}/room${roomId}.jpg`);
+    } catch (e) {
+      // 해당 이미지가 없으면 기본 이미지 반환
+      return h1;
+    }
+  };
+
+  // 백엔드 임의 결제 내역 팝업창
+  const [isPaymentDetailModalOpen, setIsPaymentDetailModalOpen] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState(null);
+
+  // 결제내역 모달 열기 함수
+  const openPaymentDetailModal = (payment) => {
+    setSelectedPayment({ ...payment, user });
+    setIsPaymentDetailModalOpen(true);
+  };
+
+  const closePaymentDetailModal = () => {
+    setIsPaymentDetailModalOpen(false);
+    setSelectedPayment(null);
+  };
+
   useEffect(() => {
     setEditableUser({
       username: user.username,
@@ -67,21 +92,50 @@ const MyPage = () => {
 
   const closeShareModal = () => setIsShareModalOpen(false);
 
+  // 백엔드 예약취소 가능여부확인
+  const isCancelable = (checkInDate, checkOutDate) => {
+    // checkInDate, checkOutDate가 yyyy-MM-dd 또는 yyyy-MM-ddTHH:mm:ss 형태일 수 있음
+
+    const today = new Date();
+    const inDate = new Date(checkInDate?.slice(0, 10));
+    const outDate = new Date(checkOutDate?.slice(0, 10));
+    // 오늘이 체크인 날짜 "이전"에만 취소 가능
+    return today < inDate;
+  };
+
+  const checkOutNextDayAction = async (roomID, checkOutDate) => {
+    // 오늘이 체크아웃 다음날(혹은 그 이후)라면 서버로 요청
+    const today = new Date();
+    const checkOut = new Date(checkOutDate);
+    const nextDay = new Date(checkOut);
+    nextDay.setDate(checkOut.getDate() + 1);
+    // 만약 오늘 >= 체크아웃 다음날이면
+    if (today >= nextDay) {
+      await fetch(`http://localhost:8080/api/room-quantity/checkout-complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomID, date: checkOutDate }) // date는 체크아웃 날짜!
+      });
+    }
+  };
+
   // 삭제 함수
-  const handleCancel = async (paymentId) => {
+  const handleCancel = async (paymentId, roomID, checkInDate, reservationID) => {
+    if (!reservationID) {
+      alert('예약 ID가 없습니다.');
+      return;
+    }
+
     try {
-      const res = await fetch(`http://localhost:8080/api/payment/${paymentId}`, {
+      const res = await fetch(`http://localhost:8080/api/reservation/${reservationID}`, {
         method: 'DELETE',
       });
       if (!res.ok) throw new Error('삭제 실패');
-
-      // ✅ 상태 업데이트: 삭제된 항목 payments 배열에서도 제거
+      // UI 등 후처리
       setPayments((prev) => prev.filter(p => p.paymentID !== paymentId));
 
       alert('예약이 취소되었습니다.');
     } catch (err) {
-      console.error("❌ 예약취소 오류:", err);
-      console.log("삭제 시도 paymentId:", paymentId);
       alert('예약 취소 중 오류가 발생했습니다.');
     }
   };
@@ -240,7 +294,7 @@ const MyPage = () => {
       ) : (
         payments.map(pay => (
           <div key={pay.paymentID} className={styles.reservationCard}>
-            <img src={h1} alt="호텔 이미지" />
+            <img src={getRoomImagePath(pay.hotelID, pay.roomID)} alt="방 이미지" />
             <div className={styles.reservationInfo} ref={reservationRef}>
               <div className={styles.sb}>
                 <h3 className={styles.hotelName}>{pay.hotelName}</h3>
@@ -264,8 +318,14 @@ const MyPage = () => {
               {/* ✅ 버튼: 우측 하단 고정 */}
               <div className={styles.cardButtons}>
                 <button onClick={openShareModal}>공유하기</button>
-                <button>결제내역</button>
-                <button onClick={() => handleCancel(pay.paymentID)}>예약취소</button>
+                <button onClick={() => openPaymentDetailModal(pay)}>결제내역</button>
+                <button onClick={() => handleCancel(pay.paymentID, pay.roomID, pay.check_in_date, pay.reservationID)}
+                  disabled={!isCancelable(pay.check_in_date, pay.check_out_date)}
+                  style={{
+                    opacity: isCancelable(pay.check_in_date, pay.check_out_date) ? 1 : 0.5,
+                    cursor: isCancelable(pay.check_in_date, pay.check_out_date) ? 'pointer' : 'not-allowed',
+                  }}
+                >예약취소</button>
               </div>
             </div>
           </div>
@@ -389,6 +449,33 @@ const MyPage = () => {
           예약정보 캡처해서 복사
         </button>
         <button onClick={closeShareModal} className={styles.closeBtn}>닫기</button>
+      </Modal>
+
+      <Modal
+        isOpen={isPaymentDetailModalOpen}
+        onRequestClose={closePaymentDetailModal}
+        contentLabel="결제 내역"
+        className={styles.modal}
+        overlayClassName={styles.overlay}
+      >
+        <h2>결제 상세 내역</h2>
+        {selectedPayment && (
+          <div className={styles.paymentDetailBox}>
+            <p><b>예약자:</b> {user.username}</p>
+            <p><b>이메일:</b> {user.email}</p>
+            <p><b>번호:</b> {user.punNumber}</p>
+            <p><b>호텔명:</b> {selectedPayment.hotelName}</p>
+            <p><b>객실명:</b> {selectedPayment.roomName}</p>
+            <p><b>결제금액:</b> ₩{Number(selectedPayment.amount).toLocaleString()}</p>
+            <p><b>결제수단:</b> {selectedPayment.payment_method}</p>
+            <p><b>결제상태:</b> {selectedPayment.payment_status}</p>
+            <p><b>결제일자:</b> {selectedPayment.pay_date?.slice(0, 10)}</p>
+            <p><b>체크인:</b> {selectedPayment.check_in_date}</p>
+            <p><b>체크아웃:</b> {selectedPayment.check_out_date}</p>
+            {/* 필요시 paymentID 등 추가 가능 */}
+          </div>
+        )}
+        <button onClick={closePaymentDetailModal} className={styles.closeBtn}>닫기</button>
       </Modal>
     </div>
   );

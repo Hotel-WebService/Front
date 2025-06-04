@@ -4,17 +4,21 @@ const likedHotelsSlice = createSlice({
   name: 'likedHotels',
   initialState: [],
   reducers: {
+    // DB에서 받아온 hotelId 배열을 직접 세팅할 때 / 백엔드추가
+    setLikedHotels: (state, action) => action.payload, // [hotelId, hotelId, ...]
+
     toggleLike: (state, action) => {
-      const hotel = action.payload;
-      const exists = state.find(h => h.id === hotel.id);
-      if (exists) {
-        return state.filter(h => h.id !== hotel.id);
+      const hotelID = Number(action.payload);
+      if (state.includes(hotelID)) {
+        return state.filter(id => id !== hotelID);
       } else {
-        return [...state, hotel];
+        return [...state, hotelID];
       }
     },
-  },
-}); 
 
-export const { toggleLike, clearLikes } = likedHotelsSlice.actions;
+    clearLikes: () => [],
+  },
+});
+
+export const { setLikedHotels, toggleLike, clearLikes } = likedHotelsSlice.actions;
 export default likedHotelsSlice.reducer;

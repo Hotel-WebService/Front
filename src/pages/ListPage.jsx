@@ -14,6 +14,7 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import { Navigation } from 'swiper/modules';
 import HotelList from './HotelList'; // 백엔드 추가
+import { setLikedHotels } from '../features/likedHotelsSlice';
 
 // 이미지
 import search from '../assets/icon/search.jpg';
@@ -36,15 +37,15 @@ const ListPage = () => {
 
   const { dateRange } = useSelector(state => state.reservation);
   const user = useSelector(state => state.user);
+  const isAuthenticated = !!user.userID;
 
-  // 소스 추가: 호텔 DB 정보 저장
+
   const [hotelsinfo, setHotelsinfo] = useState([]);
-  // 소스 추가: 객실(방) DB 정보 저장
   const [room, setRoom] = useState([]);
 
   const navigate = useNavigate();
 
-  const [visibleCount, setVisibleCount] = useState(2); // 최초 2개만 보이기
+  const [visibleCount, setVisibleCount] = useState(5); // 최초 5개만 보이기
 
   // 호텔 정보 가져오기 (누락된 부분)
   useEffect(() => {
@@ -53,7 +54,7 @@ const ListPage = () => {
         if (!res.ok) throw new Error('fetch hotels failed');
         return res.json();
       })
-      .then(list => setHotelsinfo(list)) // ✅ 여기!
+      .then(list => setHotelsinfo(list))
       .catch(console.error);
   }, []);
 
@@ -64,7 +65,7 @@ const ListPage = () => {
         if (!res.ok) throw new Error('fetch rooms failed');
         return res.json();
       })
-      .then(list => setRoom(list))    // room에 저장
+      .then(list => setRoom(list))
       .catch(console.error);
   }, []);
 
@@ -91,14 +92,27 @@ const ListPage = () => {
       ? (hotelReviews.reduce((sum, r) => sum + r.rating, 0) / hotelReviews.length).toFixed(1)
       : "0.0";
 
-    
+    // 호텔 이미지 자동 매핑 함수
+    const getHotelImageList = (hotelId, count = 5) => {
+      const images = [];
+      for (let i = 1; i <= count; i++) {
+        try {
+          // jpg 또는 png로도 가능
+          const img = require(`../assets/hotel${hotelId}/hotel${i}.jpg`);
+          images.push(img);
+        } catch (e) {
+          // 이미지가 없으면 placeholder
+          images.push('https://placehold.co/400x300?text=No+Image');
+        }
+      }
+      return images;
+    };
 
     return {
       id: hotel.hotelID,
       name: hotel.hotelName,
       location: hotel.address,
-      rating: averageRating, //
-      reviewCount: hotelReviews.length,
+      rating: averageRating,
       discount: '0%',
       pricePerNight: room.find(r => r.hotelID === hotel.hotelID)?.price
         ? `₩${room.find(r => r.hotelID === hotel.hotelID).price.toLocaleString()}`
@@ -107,7 +121,7 @@ const ListPage = () => {
         ? `₩${room.find(r => r.hotelID === hotel.hotelID).price.toLocaleString()}`
         : '가격정보없음',
       liked: false,
-      images: [hotel1, hotel2, hotel3],
+      images: getHotelImageList(hotel.hotelID, 5),
       facilities: [
         '호텔',
         '수영장',
@@ -119,6 +133,45 @@ const ListPage = () => {
   });
 
   console.log('매핑된 호텔 정보:', mappedHotels);
+
+  // 찜 목록 불러오기
+  const fetchUserLikes = async () => {
+    if (!user.userID) return;
+    const res = await fetch(`http://localhost:8080/api/likes?userID=${user.userID}`, {
+      credentials: "include"
+    });
+    const likeList = await res.json();
+    console.log('likeList:', likeList);
+    if (Array.isArray(likeList)) {
+      dispatch(setLikedHotels(likeList.map(like => Number(like.hotelID)))); // hotelID로!
+    } else {
+      dispatch(setLikedHotels([]));
+    }
+  };
+
+  // 찜 불러오기 초기화
+  useEffect(() => {
+    fetchUserLikes();
+  }, [user.userID]);
+
+  const handleLike = async (hotel) => {
+    if (!user.userID) return alert("로그인이 필요합니다!");
+    const isLiked = likedHotels.includes(hotel.id);
+    if (isLiked) {
+      await fetch(`http://localhost:8080/api/likes?userID=${user.userID}&hotelID=${hotel.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+    } else {
+      await fetch(`http://localhost:8080/api/likes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ userID: user.userID, hotelID: hotel.id }), // userID, hotelID로!
+      });
+    }
+    await fetchUserLikes();
+  };
 
   const toggleLocalLike = (id) => {
     setHotelsinfo(prev =>
@@ -179,6 +232,7 @@ const ListPage = () => {
       .then((data) => {
         dispatch(
           setUserInfo({
+            userID: data.userID,
             username: data.name,
             email: data.email,
             loginID: data.loginID,
@@ -243,6 +297,7 @@ const ListPage = () => {
         method: 'POST',
         credentials: 'include',
       });
+      dispatch(setLikedHotels([]));
       navigate('/');
     } catch (e) {
       console.error('로그아웃 실패', e);
@@ -250,7 +305,7 @@ const ListPage = () => {
   };
 
   const handleLoadMore = () => {
-    setVisibleCount(prev => prev + 2); // 2개씩 추가
+    setVisibleCount(prev => prev + 5); // 5개씩 추가
     console.log('매핑된 호텔 정보:', mappedHotels);
     console.log('🔍 filters:', filters);
     console.log('📌 filteredHotels.length:', filteredHotels.length);
@@ -267,13 +322,22 @@ const ListPage = () => {
           <Link to="/">🔴 Stay Manager</Link>
         </div>
         <div className="navLinks">
-          <a>{user.username}님</a>
-          <a href="/myPage">MyPage</a>
-          <a href="/savedPage">찜 목록</a>
-          <Link to="/"
-            onClick={handleLogout}
-            className={styles.logoutLink}
-          >로그아웃</Link>
+          {isAuthenticated ? (
+            <>
+              <a>{user.username}님</a>
+              <a href="/myPage">MyPage</a>
+              <a href="/savedPage">찜 목록</a>
+              <Link to="/"
+                onClick={handleLogout}
+                className={styles.logoutLink}
+              >로그아웃</Link>
+            </>
+          ) : (
+            <>
+              <Link to="/signupPage">회원가입</Link>
+              <Link to="/login">로그인</Link>
+            </>
+          )}
         </div>
       </header>
       {/* Header */}
@@ -400,7 +464,7 @@ const ListPage = () => {
 
 
           {sortedHotels.slice(0, visibleCount).map(item => {
-            const isLiked = likedHotels.some(h => h.id === item.id);
+            const isLiked = isAuthenticated && likedHotels.some(hid => Number(hid) === Number(item.id));
             return (
               <div key={item.id} className={styles.cardWrapper}>
                 <Link to={`/reservation/${item.id}`} className={styles.cardLink}>
@@ -426,9 +490,9 @@ const ListPage = () => {
                         <button
                           className={styles.btnSchedule}
                           style={{ backgroundColor: isLiked ? '#40c9c9' : '#ccc' }}
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.preventDefault();
-                            dispatch(toggleLike(item)); // ✅ Redux에 찜 상태 저장
+                            await handleLike(item);
                           }}
                         >
                           {isLiked ? '찜해제' : '찜하기'}
@@ -443,10 +507,7 @@ const ListPage = () => {
                         </div>
                       </div>
                       <div className={styles.cardBottom}>
-                        <div className={styles.cardLeft}>
-                          <div className={styles.rating}>★ {item.rating}</div>
-                          <div className={styles.reviewCount}>리뷰 {item.reviewCount}개</div>
-                        </div>
+                        <div className={styles.rating}>★ {item.rating}</div>
                         <div className={styles.priceInfo}>
                           <div className={styles.starVisual}>
                             {

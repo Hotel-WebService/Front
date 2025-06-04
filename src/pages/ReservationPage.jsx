@@ -11,6 +11,7 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { setUserInfo } from '../features/userSlice';
 import { useNavigate } from "react-router-dom";
+import Holidays from "date-holidays"; // 휴일 추가
 
 // 이미지
 import instargram from '../assets/icon/instargram.jpg';
@@ -19,8 +20,6 @@ import twitter from '../assets/icon/twitter.jpg';
 import searchIcon from '../assets/icon/search.jpg';
 
 const ReservationPage = () => {
-    // Test
-    const [nearbyPlaces, setNearbyPlaces] = useState([]);
 
     const user = useSelector(state => state.user);
     const search = useSelector(state => state.search);
@@ -50,6 +49,10 @@ const ReservationPage = () => {
     const [selectedReservationID, setSelectedReservationID] = useState("");
 
     const [reviewslist, setReviewslist] = useState([]);
+
+    const [roomAvailabilities, setRoomAvailabilities] = useState({}); // { roomID: 가능개수 }
+
+    const [isAvailLoading, setIsAvailLoading] = useState(false);
 
     // 결제사(PG) 코드 목록
     const PG_CODES = [
@@ -93,6 +96,37 @@ const ReservationPage = () => {
     const [newReview, setNewReview] = useState("");
     const [newScore, setNewScore] = useState(10); // 기본값 10점
 
+    const hd = new Holidays("KR");
+
+    // 날짜 변경할 때 마다 방 이용여부 확인
+    useEffect(() => {
+        if (!startDate || !endDate || rrooms.length === 0) {
+            setRoomAvailabilities({});
+            setIsAvailLoading(false); // 초기화
+            return;
+        }
+        setRoomAvailabilities({}); // ← 로딩 직전, 항상 초기화
+        setIsAvailLoading(true);
+        const fetchAvailabilities = async () => {
+            setIsAvailLoading(true);
+            const results = {};
+            for (const room of rrooms) {
+                try {
+                    // *checkRoomAvailability는 이미 구현됨
+                    const available = await checkRoomAvailability(
+                        room.roomID,
+                        formatDate(startDate)
+                    );
+                    results[room.roomID] = available;
+                } catch (e) {
+                    results[room.roomID] = 0; // 오류시 0으로 처리
+                }
+            }
+            setRoomAvailabilities(results);
+            setIsAvailLoading(false); // fetch 끝!
+        };
+        fetchAvailabilities();
+    }, [startDate, endDate, rrooms]);
 
     // --- 2) 카카오 스크립트 한 번만 로드 ---
     useEffect(() => {
@@ -278,15 +312,22 @@ const ReservationPage = () => {
 
     const imageList = getImageList(id, 5);
 
-     const allGalleryImages = [
+    const allGalleryImages = [
         ...getImageList(id, 5), // hero 이미지들
         ...rrooms.map(room => getRoomImagePath(id, room.roomID)) // 객실 이미지들
     ];
 
-    const openBookingModal = (room) => {
-        setSelectedRoom(room);
-        setIsBookingModalOpen(true);
-        console.log("선택된 방 정보:", room);
+    const openBookingModal = async (room) => {
+        if (!startDate || !endDate) {
+            alert("입실일/퇴실일을 선택하세요.");
+            return;
+        } else {
+            const roomDate = formatDate(startDate);
+            const available = await checkRoomAvailability(room.id, roomDate);
+            setSelectedRoom(room);
+            setIsBookingModalOpen(true);
+            console.log("선택된 방 정보:", room);
+        }
     };
 
     const closeBookingModal = () => {
@@ -296,7 +337,35 @@ const ReservationPage = () => {
         setGuestPhone("");
     };
 
-    const handlePayment = () => {
+    // 2. 함수 추가
+    function getTotalRoomPrice(roomPrice, startDate, endDate) {
+        if (!startDate || !endDate) return 0;
+        let total = 0;
+        const day = new Date(startDate);
+        const lastDay = new Date(endDate);
+
+        while (day < lastDay) {
+            //    const ymd = day.toISOString().slice(0, 10);
+            const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+            const isHoliday = hd.isHoliday(day);
+            //holidays.includes(ymd);
+            if (isWeekend || isHoliday) {
+                total += Math.round(roomPrice * 1.1);
+            } else {
+                total += roomPrice;
+            }
+            day.setDate(day.getDate() + 1);
+        }
+        return total;
+    }
+
+    // 3. 숙박일수 표시/결제 금액 계산에 사용
+    const totalAmount =
+        selectedRoom && startDate && endDate
+            ? getTotalRoomPrice(selectedRoom.price, startDate, endDate)
+            : 0;
+
+    const handlePayment = async () => {
         if (!user.userID) {
             alert("로그인이 필요합니다!");
             return;
@@ -309,6 +378,16 @@ const ReservationPage = () => {
             alert("입실일/퇴실일을 선택하세요.");
             return;
         }
+
+        const ok = await checkRoomAvailability(
+            selectedRoom.id,
+            formatDate(startDate)
+        );
+        if (!ok) {
+            alert("방이 모두 예약되었습니다!");
+            return;
+        }
+
         // [2] 입실일이 오늘보다 이전이면 예약 불가
         const today = new Date();
         today.setHours(0, 0, 0, 0); // 시간 00시로 맞춰 비교
@@ -318,7 +397,10 @@ const ReservationPage = () => {
         }
         // [3] 선택한 인원 > 객실 가용 인원
 
-        if (people > selectedRoom.capacity || bookingPeople > selectedRoom.capacity) {
+        if (
+            people > selectedRoom.capacity ||
+            bookingPeople > selectedRoom.capacity
+        ) {
             alert(`이 객실의 최대 인원은 ${selectedRoom.capacity}명입니다.`);
             return;
         }
@@ -341,10 +423,20 @@ const ReservationPage = () => {
                 buyer_name: guestName,
                 buyer_tel: guestPhone,
             },
-            function (rsp) {
+            async function (rsp) {
                 // rsp.success: true/false
                 if (rsp.success) {
-                    // **결제 성공 후 백엔드에 검증 요청**
+                    const ok = await reserveRoom(
+                        selectedRoom.id,
+                        formatDate(startDate),
+                        1
+                    );
+                    if (!ok) {
+                        alert(
+                            "결제 성공했으나, 방이 모두 예약되었습니다!\n결제 환불 요청 바랍니다."
+                        );
+                        return;
+                    }
                     fetch("http://localhost:8080/api/pay/verify", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -354,6 +446,7 @@ const ReservationPage = () => {
                         .then((data) => {
                             alert("결제 성공 및 검증 완료");
                             // data로 추가 처리 가능
+
                             handleReservationAndPayment();
                             closeBookingModal();
                         })
@@ -378,6 +471,9 @@ const ReservationPage = () => {
             check_out_date: formatDate(endDate),
             // status, reservationDate는 백엔드에서 자동
         };
+
+        const amount = getTotalRoomPrice(selectedRoom.price, startDate, endDate);
+
         // 2. 결제 데이터
         const paymentData = {
             amount: selectedRoom.price,
@@ -471,6 +567,30 @@ const ReservationPage = () => {
         }
     };
 
+    // 결제 성공 후 실제 예약(재고 차감)
+    const reserveRoom = async (roomID, date, count = 1) => {
+        const res = await fetch(
+            `http://localhost:8080/api/room-quantity/reserve?roomID=${roomID}&date=${date}&count=${count}`,
+            { method: "POST", credentials: "include" }
+        );
+        if (!res.ok) return false;
+        const ok = await res.json();
+        return ok;
+    };
+
+    // 객실 재고만 조회 (방이 없으면 row 생성, reserved_count=0)
+    const checkRoomAvailability = async (roomID, date) => {
+        const res = await fetch(
+            `http://localhost:8080/api/room-quantity?roomID=${roomID}&date=${date}`,
+            { credentials: "include" }
+        );
+        if (res.status === 404) return null;
+        if (!res.ok) throw new Error("객실 재고 조회 실패");
+        const q = await res.json();
+        // DB 컬럼명: availableCount (백엔드 camelCase)
+        return q.available_count ?? q.availableCount ?? null;
+    };
+
     return (
         <div>
             {/* Header */}
@@ -503,7 +623,7 @@ const ReservationPage = () => {
                     placeholderText="날짜 선택"
                     dateFormat="yyyy/MM/dd"
                     locale={ko}
-
+                    minDate={new Date()}
                 />
 
                 <input
@@ -630,6 +750,7 @@ const ReservationPage = () => {
                         locale={ko}
                         placeholderText="입실일"
                         className={styles.dateInput}
+                        minDate={new Date()}
                     />
                 </div>
                 <div className={styles.dateBox}>
@@ -641,6 +762,7 @@ const ReservationPage = () => {
                         locale={ko}
                         placeholderText="퇴실일"
                         className={styles.dateInput}
+                        minDate={new Date()}
                     />
                 </div>
                 <div className={styles.dateBox}>
@@ -656,33 +778,58 @@ const ReservationPage = () => {
             </div>
 
             <div className={styles.rooms}>
-                {rooms.map(room => (
-                    <div key={room.id} className={styles.roomCard}>
-                        <div
-                            className={styles.img}
-                            style={{ backgroundImage: `url(${room.image})` }}
-                        ></div>
-                        <div className={styles.roomContent}>
-                            <div className={styles.roomName}>
-                                {room.name}
-                            </div>
-                            <div className={styles.roomSpecs}>
-                                {room.specs[0].split(',').map((line, idx) => (
-                                    <div key={idx}>- {line.trim()}</div>
-                                ))}
-                            </div>
-                            <div className={styles.priceBox}>
-                                <div className={styles.price}>₩{room.price.toLocaleString()}</div>
-                                <div className={styles.totalPrice}>총 요금: ₩{Math.round(room.price * 1.18).toLocaleString()}</div>
-                                <div className={styles.taxNote}>세금 및 수수료 포함</div>
-                            </div>
+                {rooms.map((room) => {
+                    const available = roomAvailabilities[room.id];
+                    return (
+                        <div key={room.id} className={styles.roomCard}>
+                            <div
+                                className={styles.img}
+                                style={{ backgroundImage: `url(${room.image})` }}
+                            ></div>
+                            <div className={styles.roomContent}>
+                                <div className={styles.roomName}>{room.name}</div>
+                                <div className={styles.roomSpecs}>
+                                    {room.specs[0].split(",").map((line, idx) => (
+                                        <div key={idx}>- {line.trim()}</div>
+                                    ))}
+                                </div>
+                                <div className={styles.priceBox}>
+                                    <div className={styles.price}>
+                                        1박 요금: ₩{room.price.toLocaleString()}
+                                    </div>
+                                    <div className={styles.totalPrice}>
+                                        총 요금: ₩
+                                        {getTotalRoomPrice(
+                                            room.price,
+                                            startDate,
+                                            endDate
+                                        ).toLocaleString()}
+                                    </div>
+                                    <div className={styles.taxNote}>세금 및 수수료 포함</div>
+                                </div>
 
-                            <button className={styles.reserveBtn} onClick={() => openBookingModal(room)}>
-                                예약하기
-                            </button>
+                                {isAvailLoading ? (
+                                    <div className={styles.loadingAvail}>
+                                        예약 가능 여부 확인중...
+                                    </div>
+                                ) : available !== null &&
+                                    typeof available === "number" &&
+                                    available === 0 ? (
+                                    <div className={styles.soldoutText}>
+                                        해당 날짜에는 방이 모두 예약되었습니다
+                                    </div>
+                                ) : (
+                                    <button
+                                        className={styles.reserveBtn}
+                                        onClick={() => openBookingModal(room)}
+                                    >
+                                        예약하기
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             <div className={styles.divider}></div>
@@ -699,7 +846,10 @@ const ReservationPage = () => {
 
             <div ref={reviewsRef} className={styles.reviews}>
                 <div className={styles.reviewsHeader}>
-                    <div className={styles.reviewsScore}>{averageScore}<span>/10</span></div>
+                    <div className={styles.reviewsScore}>
+                        {averageScore}
+                        <span>/10</span>
+                    </div>
                     <div className={styles.reviewsSub}>리뷰 수 {reviews.length}개</div>
                 </div>
 
@@ -713,7 +863,9 @@ const ReservationPage = () => {
                         className={styles.reservationID}
                     >
                         {Array.from({ length: 11 }, (_, i) => (
-                            <option key={i} value={i}>{i}점</option>
+                            <option key={i} value={i}>
+                                {i}점
+                            </option>
                         ))}
                     </select>
                 </div>
@@ -723,13 +875,14 @@ const ReservationPage = () => {
                     <select
                         id="reservationSelect"
                         value={selectedReservationID}
-                        onChange={e => setSelectedReservationID(e.target.value)}
+                        onChange={(e) => setSelectedReservationID(e.target.value)}
                         className={styles.reservationID}
                     >
                         <option value="">예약 선택</option>
-                        {myReservations.map(res => (
+                        {myReservations.map((res) => (
                             <option key={res.reservationID} value={res.reservationID}>
-                                #{res.reservationID} - {res.check_in_date} ~ {res.check_out_date}
+                                #{res.reservationID} - {res.check_in_date} ~{" "}
+                                {res.check_out_date}
                             </option>
                         ))}
                     </select>
@@ -740,8 +893,6 @@ const ReservationPage = () => {
                     value={newReview}
                     onChange={(e) => setNewReview(e.target.value)}
                 />
-
-
 
                 <button className={styles.reserveBtn} onClick={handleAddReview}>등록하기</button>
 
