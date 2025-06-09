@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@chakra-ui/icons": "^2.2.4",
+    "@chakra-ui/react": "^2.10.9",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
     "@reduxjs/toolkit": "^2.8.2",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
@@ -11,6 +15,7 @@
     "axios": "^1.9.0",
     "date-fns": "^4.1.0",
     "date-holidays": "^3.24.3",
+    "framer-motion": "^12.16.0",
     "html2canvas": "^1.4.1",
     "react": "^19.1.0",
     "react-datepicker": "^8.3.0",

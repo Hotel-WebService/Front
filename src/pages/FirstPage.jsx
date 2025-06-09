@@ -70,6 +70,33 @@ const FirstPage = () => {
     }
   };
 
+  const holidays = [
+    '2025-01-01',
+    '2025-03-01',
+    '2025-05-05',
+    '2025-06-06',
+    '2025-08-15',
+    '2025-10-03',
+    '2025-10-09',
+    '2025-12-25'
+  ];
+
+  const isFuture = (date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // 시간 제거
+    return date > today;
+  };
+
+  const isHoliday = (date) => {
+    const formatted = date.toISOString().slice(0, 10); // 'yyyy-mm-dd'
+    return holidays.includes(formatted);
+  };
+
+  const isWeekend = (date) => {
+    const day = date.getDay();
+    return day === 0 || day === 6; // 일요일(0), 토요일(6)
+  };
+
   return (
     <div>
       {/* Booking Form */}
@@ -128,6 +155,12 @@ const FirstPage = () => {
                 showPopperArrow={false}
                 locale={ko}
                 minDate={new Date()}
+                dayClassName={(date) => {
+                  if (!isFuture(date)) return '';
+                  if (isHoliday(date)) return 'holiday';
+                  if (isWeekend(date)) return 'weekend';
+                  return undefined;
+                }}
               />
             </div>
             <div>
@@ -141,6 +174,12 @@ const FirstPage = () => {
                 showPopperArrow={false}
                 locale={ko}
                 minDate={new Date()}
+                dayClassName={(date) => {
+                  if (!isFuture(date)) return '';
+                  if (isHoliday(date)) return 'holiday';
+                  if (isWeekend(date)) return 'weekend';
+                  return undefined;
+                }}
               />
             </div>
           </div>

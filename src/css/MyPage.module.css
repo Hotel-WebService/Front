@@ -62,12 +62,16 @@
     position: relative;
 }
 
+.reservationWrapper {
+  margin-bottom: 1rem;
+}
+
 .cardButtons {
-    position: absolute;
-    bottom: 16px;
-    right: 16px;
-    display: flex;
-    gap: 8px;
+  display: flex;
+  justify-content: right;
+  gap: 1rem;
+  margin-top: 1rem;
+  margin-right: 3rem;
 }
 
 .cardButtons button {
@@ -232,4 +236,110 @@
     max-width: 100%;
     border: 1px solid #ccc;
     border-radius: 8px;
+}
+
+/* 모달 배경 오버레이 */
+.overlay {
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+}
+
+/* 모달 박스 */
+.paymentModal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    max-width: 90%;
+    background: #fff;
+    border-radius: 16px;
+    padding: 30px 25px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    z-index: 1010;
+    font-family: 'Pretendard', sans-serif;
+}
+
+/* 제목 */
+.paymentModal h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.4rem;
+    text-align: center;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
+}
+
+/* 결제 상세 내역 내용 박스 */
+.paymentDetailBox {
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #fefefe;
+    padding: 20px;
+    border: 1px dashed #999;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    font-size: 0.9rem;
+    line-height: 1.7;
+    position: relative;
+    margin-top: 10px;
+    margin-left: 1rem;
+}
+
+/* 영수증 제목 */
+.paymentDetailBox::before {
+    content: '🧾 STAY MANAGER RECEIPT';
+    display: block;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1rem;
+    margin-bottom: 16px;
+    border-bottom: 1px dashed #ccc;
+    padding-bottom: 8px;
+}
+
+/* 각 항목 구분선 */
+.paymentDetailBox p {
+    margin: 6px 0;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed #eee;
+}
+
+/* 마지막 줄은 밑줄 제거 */
+.paymentDetailBox p:last-child {
+    border-bottom: none;
+}
+
+/* 결제 금액 강조 */
+.paymentDetailBox p b {
+    font-weight: bold;
+    color: #222;
+}
+
+/* 영수증 하단 메모 */
+.paymentDetailBox::after {
+    display: block;
+    text-align: center;
+    margin-top: 16px;
+    font-size: 0.85rem;
+    color: #666;
+    font-style: italic;
+}
+
+/* 닫기 버튼 */
+.closeBtn {
+    margin-top: 20px;
+    background-color: #f44336;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: block;
+    width: 100%;
+}
+
+.closeBtn:hover {
+    background-color: #d32f2f;
 }

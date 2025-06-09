@@ -3,7 +3,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { setUserInfo, updateUserInfo } from '../features/userSlice';
 import { setSortOption, setFilters, toggleService } from '../features/filterSlice';
 import { setDestination, setDates, setPeople } from '../features/searchSlice';
-import { toggleLike } from '../features/likedHotelsSlice';
 import styles from '../css/ListPage.module.css';
 import DatePicker from 'react-datepicker';
 import { ko } from 'date-fns/locale';
@@ -13,14 +12,10 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import { Navigation } from 'swiper/modules';
-import HotelList from './HotelList'; // 백엔드 추가
 import { setLikedHotels } from '../features/likedHotelsSlice';
 
 // 이미지
 import search from '../assets/icon/search.jpg';
-import hotel1 from '../assets/hotel2/hotel1.jpg';
-import hotel2 from '../assets/hotel2/hotel2.jpg';
-import hotel3 from '../assets/hotel2/hotel3.jpg';
 import instargram from '../assets/icon/instargram.jpg';
 import facebook from '../assets/icon/facebook.jpg';
 import twitter from '../assets/icon/twitter.jpg';
@@ -313,6 +308,32 @@ const ListPage = () => {
     console.log('📌 visibleCount:', visibleCount);
   };
 
+  const holidays = [
+    '2025-01-01',
+    '2025-03-01',
+    '2025-05-05',
+    '2025-06-06',
+    '2025-08-15',
+    '2025-10-03',
+    '2025-10-09',
+    '2025-12-25'
+  ];
+
+  const isFuture = (date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // 시간 제거
+    return date > today;
+  };
+
+  const isHoliday = (date) => {
+    const formatted = date.toISOString().slice(0, 10); // 'yyyy-mm-dd'
+    return holidays.includes(formatted);
+  };
+
+  const isWeekend = (date) => {
+    const day = date.getDay();
+    return day === 0 || day === 6; // 일요일(0), 토요일(6)
+  };
 
   return (
     <div>
@@ -361,6 +382,12 @@ const ListPage = () => {
           dateFormat="yyyy/MM/dd"
           locale={ko}
           minDate={new Date()}
+          dayClassName={(date) => {
+            if (!isFuture(date)) return '';
+            if (isHoliday(date)) return 'holiday';
+            if (isWeekend(date)) return 'weekend';
+            return undefined;
+          }}
         />
 
         <input

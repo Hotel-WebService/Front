@@ -78,7 +78,13 @@ body .react-datepicker-popper {
   z-index: 9999 !important;
 }
 
-/*DatePicker*/
+body .react-datepicker__day.holiday {
+  color: red;
+}
+
+body .react-datepicker__day.weekend {
+  color: red;
+}
 
 /* Footer */
 footer {

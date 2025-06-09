@@ -292,44 +292,45 @@ const MyPage = () => {
       {payments.length === 0 ? (
         <p className={styles.noReservation}>결제된 예약이 없습니다.</p>
       ) : (
-        payments.map(pay => (
-          <div key={pay.paymentID} className={styles.reservationCard}>
-            <img src={getRoomImagePath(pay.hotelID, pay.roomID)} alt="방 이미지" />
-            <div className={styles.reservationInfo} ref={reservationRef}>
-              <div className={styles.sb}>
-                <h3 className={styles.hotelName}>{pay.hotelName}</h3>
-                <p className={styles.reserverName}>예약자: {user.username}</p>
+          payments.map(pay => (
+            <div key={pay.paymentID} className={styles.reservationWrapper}>
+              <div className={styles.reservationCard} ref={reservationRef}>
+                <img src={getRoomImagePath(pay.hotelID, pay.roomID)} alt="방 이미지" />
+                <div className={styles.reservationInfo}>
+                  <div className={styles.sb}>
+                    <h3 className={styles.hotelName}>{pay.hotelName}</h3>
+                    <p className={styles.reserverName}>예약자: {user.username}</p>
+                  </div>
+                  <div className={styles.sb}>
+                    <p className={styles.roomName}>객실명: {pay.roomName}</p>
+                    <p className={styles.payDate}>결제일자: {pay.pay_date?.slice(0, 10)}</p>
+                  </div>
+                  <div className={styles.sb}>
+                    <p>결제수단: {pay.payment_method}</p>
+                    <p>결제상태: {pay.payment_status}</p>
+                  </div>
+                  <div className={styles.sb}>
+                    <p>결제 금액: ₩{Number(pay.amount).toLocaleString()}</p>
+                  </div>
+                </div>
               </div>
 
-              <div className={styles.sb}>
-                <p className={styles.roomName}>객실명: {pay.roomName}</p>
-                <p className={styles.payDate}>결제일자: {pay.pay_date?.slice(0, 10)}</p>
-              </div>
-
-              <div className={styles.sb}>
-                <p>결제수단: {pay.payment_method}</p>
-                <p>결제상태: {pay.payment_status}</p>
-              </div>
-
-              <div className={styles.sb}>
-                <p>결제 금액: ₩{Number(pay.amount).toLocaleString()}</p>
-              </div>
-
-              {/* ✅ 버튼: 우측 하단 고정 */}
               <div className={styles.cardButtons}>
                 <button onClick={openShareModal}>공유하기</button>
                 <button onClick={() => openPaymentDetailModal(pay)}>결제내역</button>
-                <button onClick={() => handleCancel(pay.paymentID, pay.roomID, pay.check_in_date, pay.reservationID)}
+                <button
+                  onClick={() => handleCancel(pay.paymentID, pay.roomID, pay.check_in_date, pay.reservationID)}
                   disabled={!isCancelable(pay.check_in_date, pay.check_out_date)}
                   style={{
                     opacity: isCancelable(pay.check_in_date, pay.check_out_date) ? 1 : 0.5,
                     cursor: isCancelable(pay.check_in_date, pay.check_out_date) ? 'pointer' : 'not-allowed',
                   }}
-                >예약취소</button>
+                >
+                  예약취소
+                </button>
               </div>
             </div>
-          </div>
-        ))
+          ))
       )}
 
       <div className={styles.divider}></div>
@@ -455,7 +456,7 @@ const MyPage = () => {
         isOpen={isPaymentDetailModalOpen}
         onRequestClose={closePaymentDetailModal}
         contentLabel="결제 내역"
-        className={styles.modal}
+        className={styles.paymentModal}
         overlayClassName={styles.overlay}
       >
         <h2>결제 상세 내역</h2>
