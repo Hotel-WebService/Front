@@ -216,7 +216,7 @@ const SavedPage = () => {
                         <div className={styles.emptyBox}>찜한 호텔이 없습니다.</div>
                     ) : (
                         sortedLikedHotels.map(item => (
-                            <Link to={`/reservation/${item.id}`} className={styles.cardLink} key={item.id}>
+                            <Link to={`/reservationPage/${item.id}`} className={styles.cardLink} key={item.id}>
                                 <div className={styles.cardWrapper}>
                                     <div className={styles.card}>
                                         <div className={styles.imageGroup}>

@@ -13,6 +13,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { setLogin, setLogout } from '../features/userSlice';
 import { setDestination, setDates, setPeople } from '../features/searchSlice';
 import { setLocation, setCheckin, setCheckout, setGuests } from '../features/reservationSlice';
+import { Button, useToast } from '@chakra-ui/react';
 
 // 이미지
 import heroImage from '../assets/firstPage/firstPage.jpg';
@@ -72,11 +73,22 @@ const FirstPage = () => {
 
   const holidays = [
     '2025-01-01',
+    '2025-01-27',
+    '2025-01-28',
+    '2025-01-29',
+    '2025-01-30',
     '2025-03-01',
+    '2025-03-03',
     '2025-05-05',
+    '2025-05-06',
+    '2025-06-03',
     '2025-06-06',
     '2025-08-15',
     '2025-10-03',
+    '2025-10-05',
+    '2025-10-06',
+    '2025-10-07',
+    '2025-10-08',
     '2025-10-09',
     '2025-12-25'
   ];
@@ -88,7 +100,10 @@ const FirstPage = () => {
   };
 
   const isHoliday = (date) => {
-    const formatted = date.toISOString().slice(0, 10); // 'yyyy-mm-dd'
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const formatted = `${year}-${month}-${day}`; // YYYY-MM-DD 형식
     return holidays.includes(formatted);
   };
 
@@ -96,6 +111,8 @@ const FirstPage = () => {
     const day = date.getDay();
     return day === 0 || day === 6; // 일요일(0), 토요일(6)
   };
+
+  const toast = useToast();
 
   return (
     <div>
@@ -173,7 +190,7 @@ const FirstPage = () => {
                 popperPlacement="bottom-start"
                 showPopperArrow={false}
                 locale={ko}
-                minDate={new Date()}
+                minDate={checkin || new Date()} // checkin이 있으면 그 이후부터 가능
                 dayClassName={(date) => {
                   if (!isFuture(date)) return '';
                   if (isHoliday(date)) return 'holiday';
@@ -196,8 +213,11 @@ const FirstPage = () => {
           </div>
 
           <Link to="/listPage">
-            <button
-              className={styles.searchBtn}
+            <Button
+              colorScheme="red"
+              size="md"
+              mt={4}
+              w="100%"
               onClick={() => {
                 dispatch(setDestination(location));
                 dispatch(setDates({ startDate: checkin, endDate: checkout }));
@@ -205,15 +225,41 @@ const FirstPage = () => {
               }}
             >
               검색
-            </button>
+            </Button>
           </Link>
         </div>
       </section>
 
       {/* AI 컨설팅 */}
       <section className={styles.consulting}>
-        <h2>Ai: 나에게 딱 맞는 여행지 컨설팅</h2>
-        <Link to="/ai" className={styles.btn}>Ai 컨설팅 받기</Link>
+        <h2>AI: 나에게 딱 맞는 여행지 컨설팅</h2>
+        <Button
+          colorScheme="red"
+          size="md"
+          width="10%"
+          fontWeight="bold"
+          borderRadius="full"
+          _hover={{ transform: "scale(1.05)" }}
+          transition="all 0.2s"
+          right="-25px"
+          onClick={() => {
+            if (isAuthenticated) {
+              navigate("/ai");
+            } else {
+              toast({
+                title: "로그인이 필요합니다.",
+                description: "AI 컨설팅 기능은 로그인 후 이용 가능합니다.",
+                status: "warning",
+                duration: 3000,
+                isClosable: true,
+                position: "top"
+              });
+              navigate("/login");
+            }
+          }}
+        >
+          AI 컨설팅 받기
+        </Button>
       </section>
 
       {/* 서비스 카드 */}

@@ -22,8 +22,7 @@ function App() {
           <Route path="/myPage" element={<MyPage />} />
           <Route path="/savedPage" element={<SavedPage />} />
           <Route path="/listPage" element={<ListPage />} />
-          <Route path="/reservationPage" element={<ReservationPage />} />
-          <Route path="/reservation/:id" element={<ReservationPage />} />
+          <Route path="/reservationPage/:id" element={<ReservationPage />} />
           <Route path="/signupPage" element={<SignupPage />} />
           <Route path="/hotelList" element={<HotelList />} />
         </Routes>

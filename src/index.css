@@ -79,7 +79,7 @@ body .react-datepicker-popper {
 }
 
 body .react-datepicker__day.holiday {
-  color: red;
+  color: red !important;
 }
 
 body .react-datepicker__day.weekend {

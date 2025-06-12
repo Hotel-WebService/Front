@@ -63,15 +63,15 @@
 }
 
 .reservationWrapper {
-  margin-bottom: 1rem;
+    margin-bottom: 1rem;
 }
 
 .cardButtons {
-  display: flex;
-  justify-content: right;
-  gap: 1rem;
-  margin-top: 1rem;
-  margin-right: 3rem;
+    display: flex;
+    justify-content: right;
+    gap: 1rem;
+    margin-top: 1rem;
+    margin-right: 3rem;
 }
 
 .cardButtons button {
@@ -342,4 +342,37 @@
 
 .closeBtn:hover {
     background-color: #d32f2f;
+}
+
+.confirmModal {
+    background-color: white;
+    padding: 20px;
+    width: 300px;
+    /* ✅ 작은 크기 */
+    max-width: 90%;
+    margin: auto;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+.confirmBtn {
+    background-color: #e74c3c;
+    color: white;
+    padding: 8px 16px;
+    margin-right: 10px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+}
+
+.cancelBtn {
+    background-color: #bdc3c7;
+    color: black;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
 }

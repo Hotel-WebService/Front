@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setUserInfo } from '../features/userSlice';
 import styles from '../css/LoginPage.module.css';
+import { useToast } from '@chakra-ui/react';
 
 // 이미지
 import instargram from '../assets/icon/instargram.jpg';
@@ -15,6 +16,7 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const toast = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -56,15 +58,29 @@ const LoginPage = () => {
 
         navigate('/'); // 홈으로 이동
       } else {
-        setError('아이디/비밀번호가 맞지 않습니다.');
+        toast({
+          title: "로그인 실패",
+          description: "아이디 또는 비밀번호가 일치하지 않습니다.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+          position: "top"
+        });
       }
     } catch (err) {
       console.error(err);
-      setError('로그인 중 오류가 발생했습니다.');
+      toast({
+        title: "서버 오류",
+        description: "로그인 중 오류가 발생했습니다.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top"
+      });
     }
   };
 
-  return (  
+  return (
     <div>
       {/* Header */}
       <header className="header">

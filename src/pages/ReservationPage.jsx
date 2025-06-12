@@ -593,11 +593,22 @@ const ReservationPage = () => {
 
     const holidays = [
         '2025-01-01',
+        '2025-01-27',
+        '2025-01-28',
+        '2025-01-29',
+        '2025-01-30',
         '2025-03-01',
+        '2025-03-03',
         '2025-05-05',
+        '2025-05-06',
+        '2025-06-03',
         '2025-06-06',
         '2025-08-15',
         '2025-10-03',
+        '2025-10-05',
+        '2025-10-06',
+        '2025-10-07',
+        '2025-10-08',
         '2025-10-09',
         '2025-12-25'
     ];
@@ -609,7 +620,10 @@ const ReservationPage = () => {
     };
 
     const isHoliday = (date) => {
-        const formatted = date.toISOString().slice(0, 10); // 'yyyy-mm-dd'
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const formatted = `${year}-${month}-${day}`; // YYYY-MM-DD 형식
         return holidays.includes(formatted);
     };
 
@@ -733,12 +747,13 @@ const ReservationPage = () => {
                     <div className={styles.facilities}>
                         <div className={styles.serviceInfo}>시설/서비스 요약 정보</div>
                     </div>
-                    <div className={styles.facilities}>
-                        <span className={styles.facility}>실내 수영장</span>
-                        <span className={styles.facility}>사우나</span>
-                        <span className={styles.facility}>피트니스</span>
-                        <span className={styles.facility}>공항 셔틀</span>
-                    </div>
+                    {hotel?.facilities && (
+                        <div className={styles.facilities}>
+                            {hotel.facilities.split(',').map((f, i) => (
+                                <span key={i} className={styles.facility}>{f.trim()}</span>
+                            ))}
+                        </div>
+                    )}
                     <div className={styles.ratingContainer}>
                         <span className={styles.ratingBadge}>★ {averageScore}</span>
                         <span className={styles.reviewCount}>리뷰 {reviews.length}개</span>
@@ -1038,7 +1053,7 @@ const ReservationPage = () => {
                             {/* 오른쪽: 가격 */}
                             <div className={styles.priceBox}>
                                 <div className={styles.modalPrice}>₩{selectedRoom.price.toLocaleString()}</div>
-                                <div className={styles.totalPrice}>총 요금: ₩{Math.round(selectedRoom.price * 1.18).toLocaleString()}</div>
+                                <div className={styles.totalPrice}>총 요금: ₩{getTotalRoomPrice(selectedRoom.price, startDate, endDate).toLocaleString()}</div>
                                 <div className={styles.taxNote}>세금 및 수수료 포함</div>
                             </div>
                         </div>

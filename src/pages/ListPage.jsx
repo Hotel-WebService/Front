@@ -117,12 +117,9 @@ const ListPage = () => {
         : '가격정보없음',
       liked: false,
       images: getHotelImageList(hotel.hotelID, 5),
-      facilities: [
-        '호텔',
-        '수영장',
-        '조식제공',
-        hotel.parking_lot ? '주차시설' : null,
-      ].filter(Boolean),
+      facilities: hotel.facilities
+        ? hotel.facilities.split(',').map(f => f.trim())
+        : [],
       star: hotel.star,
     };
   });
@@ -310,11 +307,22 @@ const ListPage = () => {
 
   const holidays = [
     '2025-01-01',
+    '2025-01-27',
+    '2025-01-28',
+    '2025-01-29',
+    '2025-01-30',
     '2025-03-01',
+    '2025-03-03',
     '2025-05-05',
+    '2025-05-06',
+    '2025-06-03',
     '2025-06-06',
     '2025-08-15',
     '2025-10-03',
+    '2025-10-05',
+    '2025-10-06',
+    '2025-10-07',
+    '2025-10-08',
     '2025-10-09',
     '2025-12-25'
   ];
@@ -326,7 +334,10 @@ const ListPage = () => {
   };
 
   const isHoliday = (date) => {
-    const formatted = date.toISOString().slice(0, 10); // 'yyyy-mm-dd'
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const formatted = `${year}-${month}-${day}`; // YYYY-MM-DD 형식
     return holidays.includes(formatted);
   };
 
@@ -415,10 +426,17 @@ const ListPage = () => {
             <div className={styles.filteringTitle}>
               <h5>서비스</h5>
               <ul>
-                <li><label><input type="checkbox" value="호텔" onChange={handleServiceChange} />호텔</label></li>
+                <li><label><input type="checkbox" value="바" onChange={handleServiceChange} />바</label></li>
+                <li><label><input type="checkbox" value="레스토랑" onChange={handleServiceChange} />레스토랑</label></li>
+                <li><label><input type="checkbox" value="피트니스 센터" onChange={handleServiceChange} />피트니스 센터</label></li>
                 <li><label><input type="checkbox" value="수영장" onChange={handleServiceChange} />수영장</label></li>
-                <li><label><input type="checkbox" value="조식제공" onChange={handleServiceChange} />조식제공</label></li>
-                <li><label><input type="checkbox" value="주차시설" onChange={handleServiceChange} />주차시설</label></li>
+                <li><label><input type="checkbox" value="무료 주차" onChange={handleServiceChange} />무료 주차</label></li>
+                <li><label><input type="checkbox" value="세탁 시설" onChange={handleServiceChange} />세탁 시설</label></li>
+                <li><label><input type="checkbox" value="공항 교통편" onChange={handleServiceChange} />공항 교통편</label></li>
+                <li><label><input type="checkbox" value="전기차 충전소" onChange={handleServiceChange} />전기차 충전소</label></li>
+                <li><label><input type="checkbox" value="카지노" onChange={handleServiceChange} />카지노</label></li>
+                <li><label><input type="checkbox" value="반려동물 동반 가능" onChange={handleServiceChange} />반려동물 동반 가능</label></li>
+                <li><label><input type="checkbox" value="매일 24시간 프런트데스크 운영" onChange={handleServiceChange} />매일 24시간 프런트데스크 운영</label></li>
               </ul>
             </div>
             <div className={styles.divider}></div>
@@ -494,7 +512,7 @@ const ListPage = () => {
             const isLiked = isAuthenticated && likedHotels.some(hid => Number(hid) === Number(item.id));
             return (
               <div key={item.id} className={styles.cardWrapper}>
-                <Link to={`/reservation/${item.id}`} className={styles.cardLink}>
+                <Link to={`/reservationPage/${item.id}`} className={styles.cardLink}>
                   <div className={styles.card}>
                     <div className={styles.imageGroup}>
                       <Swiper

@@ -92,6 +92,9 @@ const MyPage = () => {
 
   const closeShareModal = () => setIsShareModalOpen(false);
 
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState(null); // 어떤 예약을 취소할지 저장
+
   // 백엔드 예약취소 가능여부확인
   const isCancelable = (checkInDate, checkOutDate) => {
     // checkInDate, checkOutDate가 yyyy-MM-dd 또는 yyyy-MM-ddTHH:mm:ss 형태일 수 있음
@@ -292,45 +295,53 @@ const MyPage = () => {
       {payments.length === 0 ? (
         <p className={styles.noReservation}>결제된 예약이 없습니다.</p>
       ) : (
-          payments.map(pay => (
-            <div key={pay.paymentID} className={styles.reservationWrapper}>
-              <div className={styles.reservationCard} ref={reservationRef}>
-                <img src={getRoomImagePath(pay.hotelID, pay.roomID)} alt="방 이미지" />
-                <div className={styles.reservationInfo}>
-                  <div className={styles.sb}>
-                    <h3 className={styles.hotelName}>{pay.hotelName}</h3>
-                    <p className={styles.reserverName}>예약자: {user.username}</p>
-                  </div>
-                  <div className={styles.sb}>
-                    <p className={styles.roomName}>객실명: {pay.roomName}</p>
-                    <p className={styles.payDate}>결제일자: {pay.pay_date?.slice(0, 10)}</p>
-                  </div>
-                  <div className={styles.sb}>
-                    <p>결제수단: {pay.payment_method}</p>
-                    <p>결제상태: {pay.payment_status}</p>
-                  </div>
-                  <div className={styles.sb}>
-                    <p>결제 금액: ₩{Number(pay.amount).toLocaleString()}</p>
-                  </div>
+        payments.map(pay => (
+          <div key={pay.paymentID} className={styles.reservationWrapper}>
+            <div className={styles.reservationCard} ref={reservationRef} onClick={() => navigate(`/reservationPage/${pay.hotelID}`)} style={{ cursor: 'pointer' }}>
+              <img src={getRoomImagePath(pay.hotelID, pay.roomID)} alt="방 이미지" />
+              <div className={styles.reservationInfo}>
+                <div className={styles.sb}>
+                  <h3 className={styles.hotelName}>{pay.hotelName}</h3>
+                  <p className={styles.reserverName}>예약자: {user.username}</p>
+                </div>
+                <div className={styles.sb}>
+                  <p className={styles.roomName}>객실명: {pay.roomName}</p>
+                  <p className={styles.payDate}>결제일자: {pay.pay_date?.slice(0, 10)}</p>
+                </div>
+                <div className={styles.sb}>
+                  <p>결제수단: {pay.payment_method}</p>
+                  <p>결제상태: {pay.payment_status}</p>
+                </div>
+                <div className={styles.sb}>
+                  <p>결제 금액: ₩{Number(pay.amount).toLocaleString()}</p>
                 </div>
               </div>
-
-              <div className={styles.cardButtons}>
-                <button onClick={openShareModal}>공유하기</button>
-                <button onClick={() => openPaymentDetailModal(pay)}>결제내역</button>
-                <button
-                  onClick={() => handleCancel(pay.paymentID, pay.roomID, pay.check_in_date, pay.reservationID)}
-                  disabled={!isCancelable(pay.check_in_date, pay.check_out_date)}
-                  style={{
-                    opacity: isCancelable(pay.check_in_date, pay.check_out_date) ? 1 : 0.5,
-                    cursor: isCancelable(pay.check_in_date, pay.check_out_date) ? 'pointer' : 'not-allowed',
-                  }}
-                >
-                  예약취소
-                </button>
-              </div>
             </div>
-          ))
+
+            <div className={styles.cardButtons}>
+              <button onClick={openShareModal}>공유하기</button>
+              <button onClick={() => openPaymentDetailModal(pay)}>결제내역</button>
+              <button
+                onClick={() => {
+                  setCancelTarget({
+                    paymentID: pay.paymentID,
+                    roomID: pay.roomID,
+                    checkInDate: pay.check_in_date,
+                    reservationID: pay.reservationID,
+                  });
+                  setIsConfirmModalOpen(true);
+                }}
+                disabled={!isCancelable(pay.check_in_date, pay.check_out_date)}
+                style={{
+                  opacity: isCancelable(pay.check_in_date, pay.check_out_date) ? 1 : 0.5,
+                  cursor: isCancelable(pay.check_in_date, pay.check_out_date) ? 'pointer' : 'not-allowed',
+                }}
+              >
+                예약취소
+              </button>
+            </div>
+          </div>
+        ))
       )}
 
       <div className={styles.divider}></div>
@@ -477,6 +488,39 @@ const MyPage = () => {
           </div>
         )}
         <button onClick={closePaymentDetailModal} className={styles.closeBtn}>닫기</button>
+      </Modal>
+
+      <Modal
+        isOpen={isConfirmModalOpen}
+        onRequestClose={() => setIsConfirmModalOpen(false)}
+        contentLabel="예약 취소 확인"
+        className={styles.confirmModal}
+        overlayClassName={styles.overlay}
+      >
+        <h3 style={{ fontSize: '1.1rem' }}>예약을 취소하시겠습니까?</h3>
+
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1.2rem' }}>
+          <button
+            className={styles.confirmBtn}
+            onClick={() => {
+              handleCancel(
+                cancelTarget.paymentID,
+                cancelTarget.roomID,
+                cancelTarget.checkInDate,
+                cancelTarget.reservationID
+              );
+              setIsConfirmModalOpen(false);
+            }}
+          >
+            확인
+          </button>
+          <button
+            className={styles.cancelBtn}
+            onClick={() => setIsConfirmModalOpen(false)}
+          >
+            취소
+          </button>
+        </div>
       </Modal>
     </div>
   );

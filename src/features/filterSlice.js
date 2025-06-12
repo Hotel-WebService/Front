@@ -5,7 +5,7 @@ const initialState = {
   filters: {
     services: [],
     star: null,
-    price: 500000,
+    price: 1000000,
   }
 };
 
