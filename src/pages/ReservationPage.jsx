@@ -1,30 +1,31 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { setDestination, setDates, setPeople } from '../features/searchSlice';
-import DatePicker from 'react-datepicker';
-import { ko } from 'date-fns/locale';
-import 'react-datepicker/dist/react-datepicker.css';
-import Modal from 'react-modal';
-import styles from '../css/ReservationPage.module.css';
-import { useParams } from 'react-router-dom';
-import axios from 'axios';
-import { setUserInfo } from '../features/userSlice';
+import React, { useState, useRef, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { setDestination, setDates, setPeople } from "../features/searchSlice";
+import DatePicker from "react-datepicker";
+import { ko } from "date-fns/locale";
+import "react-datepicker/dist/react-datepicker.css";
+import Modal from "react-modal";
+import styles from "../css/ReservationPage.module.css";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+import { setUserInfo } from "../features/userSlice";
 import { useNavigate } from "react-router-dom";
-import Holidays from "date-holidays"; // 휴일 추가
-
+import Holidays from "date-holidays"; 
+import { setLikedHotels } from "../features/likedHotelsSlice"; 
 // 이미지
-import instargram from '../assets/icon/instargram.jpg';
-import facebook from '../assets/icon/facebook.jpg';
-import twitter from '../assets/icon/twitter.jpg';
-import searchIcon from '../assets/icon/search.jpg';
+import instargram from "../assets/icon/instargram.jpg";
+import facebook from "../assets/icon/facebook.jpg";
+import twitter from "../assets/icon/twitter.jpg";
+import searchIcon from "../assets/icon/search.jpg";
 
 const ReservationPage = () => {
-
-    const user = useSelector(state => state.user);
-    const search = useSelector(state => state.search);
+    const user = useSelector((state) => state.user);
+    const search = useSelector((state) => state.search);
     const dispatch = useDispatch();
-    const { destination, startDate, endDate, people } = useSelector(state => state.search);
+    const { destination, startDate, endDate, people } = useSelector(
+        (state) => state.search
+    );
     const [dateRange, setDateRange] = useState([null, null]);
     const [activeTab, setActiveTab] = useState(null);
     const [showAllReviews, setShowAllReviews] = useState(false);
@@ -38,8 +39,8 @@ const ReservationPage = () => {
     const [guestName, setGuestName] = useState("");
     const [guestEmail, setGuestEmail] = useState("");
     const [guestPhone, setGuestPhone] = useState("");
-    const [isAuthenticated, setIsAuthenticated] = useState(true);
-    const navigate = useNavigate(); // 로그아웃추가
+    const isAuthenticated = !!user.userID; // 0613
+    const navigate = useNavigate(); // 0613
 
     const [bookingPeople, setBookingPeople] = useState(people); // 인원체크 추가
 
@@ -61,13 +62,16 @@ const ReservationPage = () => {
         // 필요시 다른 결제사도 추가 가능
     ];
 
-    const formatDate = date =>
+    const formatDate = (date) =>
         date
-            ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+            ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+                2,
+                "0"
+            )}-${String(date.getDate()).padStart(2, "0")}`
             : null;
 
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
-    Modal.setAppElement('#root');
+    Modal.setAppElement("#root");
 
     const openGalleryModal = () => setIsGalleryOpen(true);
     const closeGalleryModal = () => setIsGalleryOpen(false);
@@ -83,11 +87,14 @@ const ReservationPage = () => {
             intro: introRef,
             rooms: roomsRef,
             policy: policyRef,
-            reviews: reviewsRef
+            reviews: reviewsRef,
         }[tab];
 
         if (scrollToRef?.current) {
-            scrollToRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            scrollToRef.current.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+            });
         }
     };
 
@@ -131,9 +138,9 @@ const ReservationPage = () => {
     // --- 2) 카카오 스크립트 한 번만 로드 ---
     useEffect(() => {
         if (window.kakao && window.kakao.maps) return;
-        const script = document.createElement('script');
+        const script = document.createElement("script");
         script.src =
-            'https://dapi.kakao.com/v2/maps/sdk.js?appkey=d14da4067c563de35ba14987b99bdb89&autoload=false';
+            "https://dapi.kakao.com/v2/maps/sdk.js?appkey=d14da4067c563de35ba14987b99bdb89&autoload=false";
         script.async = true;
         document.head.appendChild(script);
         // SDK 로드완료 시점에 초기화 콜백 등록
@@ -146,16 +153,16 @@ const ReservationPage = () => {
         return () => {
             document.head.removeChild(script);
         };
-    }, [hotel]);  // hotel 바뀔 때도 재실행
+    }, [hotel]); // hotel 바뀔 때도 재실행
 
     // --- 3) 호텔 정보 fetch ---
     useEffect(() => {
-        fetch(`http://localhost:8080/api/hotels/${id}`, { credentials: 'include' })
-            .then(res => {
-                if (!res.ok) throw new Error('호텔을 못 찾음');
+        fetch(`http://localhost:8080/api/hotels/${id}`, { credentials: "include" })
+            .then((res) => {
+                if (!res.ok) throw new Error("호텔을 못 찾음");
                 return res.json();
             })
-            .then(data => setHotel(data))
+            .then((data) => setHotel(data))
             .catch(console.error);
     }, []);
 
@@ -187,9 +194,9 @@ const ReservationPage = () => {
     useEffect(() => {
         if (user.userID && id) {
             fetch(`http://localhost:8080/api/reservation/my?hotelID=${id}`, {
-                credentials: "include"
+                credentials: "include",
             })
-                .then(res => {
+                .then((res) => {
                     if (!res.ok) {
                         // 상세 정보 찍기!
                         console.error("예약 목록 API 실패", res.status, res.statusText);
@@ -197,8 +204,8 @@ const ReservationPage = () => {
                     }
                     return res.json();
                 })
-                .then(data => setMyReservations(data))
-                .catch(err => {
+                .then((data) => setMyReservations(data))
+                .catch((err) => {
                     // 에러 객체와 메시지 모두 출력
                     console.error("예약목록 불러오기 에러", err);
                 });
@@ -209,15 +216,15 @@ const ReservationPage = () => {
     useEffect(() => {
         if (!id) return;
         fetch(`http://localhost:8080/api/reviews/hotel/${id}`, {
-            credentials: 'include'
+            credentials: "include",
         })
-            .then(res => {
-                if (!res.ok) throw new Error('리뷰 목록 불러오기 실패');
+            .then((res) => {
+                if (!res.ok) throw new Error("리뷰 목록 불러오기 실패");
                 return res.json();
             })
-            .then(data => setReviews(data))
-            .catch(err => {
-                console.error('리뷰 목록 불러오기 에러:', err);
+            .then((data) => setReviews(data))
+            .catch((err) => {
+                console.error("리뷰 목록 불러오기 에러:", err);
             });
     }, [id]);
 
@@ -229,14 +236,16 @@ const ReservationPage = () => {
             return;
         }
 
-        const selectedReservation = myReservations.find(r => r.reservationID === Number(selectedReservationID));
+        const selectedReservation = myReservations.find(
+            (r) => r.reservationID === Number(selectedReservationID)
+        );
         if (!selectedReservation) {
             alert("예약 정보를 찾을 수 없습니다.");
             return;
         }
 
         const review = {
-            hotelID: Number(id),                 // DB 컬럼에 맞춰서
+            hotelID: Number(id), // DB 컬럼에 맞춰서
             userID: user.userID,
             reservationID: selectedReservation.reservationID,
             rating: newScore,
@@ -252,30 +261,31 @@ const ReservationPage = () => {
             credentials: "include",
             body: JSON.stringify(review),
         })
-            .then(res => {
+            .then((res) => {
                 if (!res.ok) throw new Error("리뷰 저장 실패");
                 return res.json();
             })
-            .then(data => {
+            .then((data) => {
                 alert("리뷰가 등록되었습니다!");
                 setNewReview("");
                 setNewScore(10);
                 setSelectedReservationID("");
                 // 리뷰 새로고침
                 fetch(`http://localhost:8080/api/reviews/hotel/${id}`, {
-                    credentials: 'include'
+                    credentials: "include",
                 })
-                    .then(res => res.json())
-                    .then(data => setReviews(data));
+                    .then((res) => res.json())
+                    .then((data) => setReviews(data));
             })
-            .catch(err => {
+            .catch((err) => {
                 alert("리뷰 저장 오류: " + err.message);
             });
     };
 
-
     const averageScore = reviews.length
-        ? (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length).toFixed(1)
+        ? (
+            reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length
+        ).toFixed(1)
         : "0.0";
 
     const getRoomImagePath = (hotelId, roomId) => {
@@ -284,11 +294,11 @@ const ReservationPage = () => {
             return require(`../assets/hotel${hotelId}/room${roomId}.jpg`);
         } catch (e) {
             // 없는 이미지일 때 기본 이미지 반환
-            return require('../assets/no-image.jpg');
+            return require("../assets/no-image.jpg");
         }
     };
 
-    const rooms = rrooms.map(room => ({
+    const rooms = rrooms.map((room) => ({
         id: room.roomID,
         name: room.room_name,
         specs: [room.room_description],
@@ -314,7 +324,7 @@ const ReservationPage = () => {
 
     const allGalleryImages = [
         ...getImageList(id, 5), // hero 이미지들
-        ...rrooms.map(room => getRoomImagePath(id, room.roomID)) // 객실 이미지들
+        ...rrooms.map((room) => getRoomImagePath(id, room.roomID)), // 객실 이미지들
     ];
 
     const openBookingModal = async (room) => {
@@ -478,7 +488,7 @@ const ReservationPage = () => {
         const paymentData = {
             amount: selectedRoom.price,
             payment_method: selectedPG,
-            payment_status: "완료",
+            payment_status: "Y",
             // pay_date는 백엔드에서 자동
         };
 
@@ -492,7 +502,7 @@ const ReservationPage = () => {
             const res = await fetch("http://localhost:8080/api/reservation", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(reservationData)
+                body: JSON.stringify(reservationData),
             });
             const reservation = await res.json();
 
@@ -505,8 +515,8 @@ const ReservationPage = () => {
                 body: JSON.stringify({
                     ...paymentData,
                     reservationID: reservation.reservationID,
-                    userID: user.userID
-                })
+                    userID: user.userID,
+                }),
             });
             const paymentResult = await payRes.json();
 
@@ -514,7 +524,6 @@ const ReservationPage = () => {
 
             alert("예약 및 결제 완료!");
             // 이후 이동/상태변경 등 추가 처리
-
         } catch (err) {
             alert("예약 또는 결제 저장에 실패했습니다.");
             console.error(err);
@@ -522,48 +531,54 @@ const ReservationPage = () => {
     };
 
     useEffect(() => {
-        fetch('http://localhost:8080/api/userinfo', {
-            method: 'GET',
-            credentials: 'include',
+        fetch("http://localhost:8080/api/userinfo", {
+            method: "GET",
+            credentials: "include",
         })
-            .then(res => {
-                if (!res.ok) throw new Error('사용자 정보 불러오기 실패');
+            .then((res) => {
+                if (!res.ok) throw new Error("사용자 정보 불러오기 실패");
                 return res.json();
             })
-            .then(data => {
-                dispatch(setUserInfo({
-                    userID: data.userID,
-                    username: data.name,
-                    email: data.email,
-                    loginID: data.loginID,
-                    punNumber: data.punNumber,
-                }));
+            .then((data) => {
+                dispatch(
+                    setUserInfo({
+                        userID: data.userID,
+                        username: data.name,
+                        email: data.email,
+                        loginID: data.loginID,
+                        punNumber: data.punNumber,
+                    })
+                );
             })
-            .catch(err => {
-                console.error('사용자 정보 로드 실패:', err);
+            .catch((err) => {
+                console.error("사용자 정보 로드 실패:", err);
             });
     }, []);
 
     useEffect(() => {
         // 호텔 정보 불러오기 (API 엔드포인트는 예시)
-        axios.get(`http://localhost:8080/api/hotels/${id}`).then(res => setHotel(res.data));
+        axios
+            .get(`http://localhost:8080/api/hotels/${id}`)
+            .then((res) => setHotel(res.data));
         // 방 정보도 id로 필터 (혹은 hotels에서 room을 받아와도 됨)
-        axios.get(`http://localhost:8080/api/rooms/hotel/${id}`).then(res => rsetRooms(res.data));
+        axios
+            .get(`http://localhost:8080/api/rooms/hotel/${id}`)
+            .then((res) => rsetRooms(res.data));
     }, [id]);
 
     //  if (!rhotel) return <div>로딩중...</div>;
 
-    // 백엔드 로그아웃 추가
+    // 백엔드 로그아웃 추가 (0613 내용 전체수정)
     const handleLogout = async () => {
         try {
-            await fetch('http://localhost:8080/logout', {
-                method: 'POST',
-                credentials: 'include'
+            await fetch("http://localhost:8080/logout", {
+                method: "POST",
+                credentials: "include",
             });
-            setIsAuthenticated(false);
-            navigate('/');  // 로그아웃 후 홈으로
+            dispatch(setLikedHotels([]));
+            navigate("/");
         } catch (e) {
-            console.error('로그아웃 실패', e);
+            console.error("로그아웃 실패", e);
         }
     };
 
@@ -592,25 +607,25 @@ const ReservationPage = () => {
     };
 
     const holidays = [
-        '2025-01-01',
-        '2025-01-27',
-        '2025-01-28',
-        '2025-01-29',
-        '2025-01-30',
-        '2025-03-01',
-        '2025-03-03',
-        '2025-05-05',
-        '2025-05-06',
-        '2025-06-03',
-        '2025-06-06',
-        '2025-08-15',
-        '2025-10-03',
-        '2025-10-05',
-        '2025-10-06',
-        '2025-10-07',
-        '2025-10-08',
-        '2025-10-09',
-        '2025-12-25'
+        "2025-01-01",
+        "2025-01-27",
+        "2025-01-28",
+        "2025-01-29",
+        "2025-01-30",
+        "2025-03-01",
+        "2025-03-03",
+        "2025-05-05",
+        "2025-05-06",
+        "2025-06-03",
+        "2025-06-06",
+        "2025-08-15",
+        "2025-10-03",
+        "2025-10-05",
+        "2025-10-06",
+        "2025-10-07",
+        "2025-10-08",
+        "2025-10-09",
+        "2025-12-25",
     ];
 
     const isFuture = (date) => {
@@ -621,8 +636,8 @@ const ReservationPage = () => {
 
     const isHoliday = (date) => {
         const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
         const formatted = `${year}-${month}-${day}`; // YYYY-MM-DD 형식
         return holidays.includes(formatted);
     };
@@ -634,16 +649,27 @@ const ReservationPage = () => {
 
     return (
         <div>
-            {/* Header */}
+            {/* Header 0613 전체수정*/}
             <header className="header">
                 <div className="logo">
                     <Link to="/">🔴 Stay Manager</Link>
                 </div>
                 <div className="navLinks">
-                    <a>{user.username}님</a>
-                    <a href="/myPage">MyPage</a>
-                    <a href="/savedPage">찜 목록</a>
-                    <a href="/">로그아웃</a>
+                    {isAuthenticated ? (
+                        <>
+                            <a>{user.username}님</a>
+                            <a href="/myPage">MyPage</a>
+                            <a href="/savedPage">찜 목록</a>
+                            <Link to="/" onClick={handleLogout} className={styles.logoutLink}>
+                                로그아웃
+                            </Link>
+                        </>
+                    ) : (
+                        <>
+                            <Link to="/signupPage">회원가입</Link>
+                            <Link to="/login">로그인</Link>
+                        </>
+                    )}
                 </div>
             </header>
             {/* Header */}
@@ -659,16 +685,18 @@ const ReservationPage = () => {
                     selectsRange
                     startDate={startDate}
                     endDate={endDate}
-                    onChange={([start, end]) => dispatch(setDates({ startDate: start, endDate: end }))}
+                    onChange={([start, end]) =>
+                        dispatch(setDates({ startDate: start, endDate: end }))
+                    }
                     isClearable={false}
                     placeholderText="날짜 선택"
                     dateFormat="yyyy/MM/dd"
                     locale={ko}
                     minDate={new Date()}
                     dayClassName={(date) => {
-                        if (!isFuture(date)) return '';
-                        if (isHoliday(date)) return 'holiday';
-                        if (isWeekend(date)) return 'weekend';
+                        if (!isFuture(date)) return "";
+                        if (isHoliday(date)) return "holiday";
+                        if (isWeekend(date)) return "weekend";
                         return undefined;
                     }}
                 />
@@ -685,15 +713,36 @@ const ReservationPage = () => {
                 </button>
             </div>
 
-            <Link to="/listPage" className={styles.backLink}>+ 돌아가기</Link>
+            <Link to="/listPage" className={styles.backLink}>
+                + 돌아가기
+            </Link>
 
             <section className={styles.hero}>
-                <div className={styles.big} style={{ backgroundImage: `url(${imageList[0]})` }}></div>
-                <div className={styles.thumb1} style={{ backgroundImage: `url(${imageList[1]})` }}></div>
-                <div className={styles.thumb2} style={{ backgroundImage: `url(${imageList[2]})` }}></div>
-                <div className={styles.thumb3} style={{ backgroundImage: `url(${imageList[3]})` }}></div>
-                <div className={styles.thumb4} style={{ backgroundImage: `url(${imageList[4]})` }}>
-                    <div className={styles.thumb4} style={{ backgroundImage: `url(${imageList[4]})` }} onClick={openGalleryModal}>
+                <div
+                    className={styles.big}
+                    style={{ backgroundImage: `url(${imageList[0]})` }}
+                ></div>
+                <div
+                    className={styles.thumb1}
+                    style={{ backgroundImage: `url(${imageList[1]})` }}
+                ></div>
+                <div
+                    className={styles.thumb2}
+                    style={{ backgroundImage: `url(${imageList[2]})` }}
+                ></div>
+                <div
+                    className={styles.thumb3}
+                    style={{ backgroundImage: `url(${imageList[3]})` }}
+                ></div>
+                <div
+                    className={styles.thumb4}
+                    style={{ backgroundImage: `url(${imageList[4]})` }}
+                >
+                    <div
+                        className={styles.thumb4}
+                        style={{ backgroundImage: `url(${imageList[4]})` }}
+                        onClick={openGalleryModal}
+                    >
                         <div className={styles.more}>+{allGalleryImages.length - 5}</div>
                     </div>
                 </div>
@@ -702,26 +751,26 @@ const ReservationPage = () => {
             <div className={styles.sectionTabs}>
                 <div className={styles.sectionTabs}>
                     <button
-                        className={activeTab === 'intro' ? styles.active : ''}
-                        onClick={() => handleTabClick('intro')}
+                        className={activeTab === "intro" ? styles.active : ""}
+                        onClick={() => handleTabClick("intro")}
                     >
                         소개
                     </button>
                     <button
-                        className={activeTab === 'rooms' ? styles.active : ''}
-                        onClick={() => handleTabClick('rooms')}
+                        className={activeTab === "rooms" ? styles.active : ""}
+                        onClick={() => handleTabClick("rooms")}
                     >
                         객실
                     </button>
                     <button
-                        className={activeTab === 'policy' ? styles.active : ''}
-                        onClick={() => handleTabClick('policy')}
+                        className={activeTab === "policy" ? styles.active : ""}
+                        onClick={() => handleTabClick("policy")}
                     >
                         정책
                     </button>
                     <button
-                        className={activeTab === 'reviews' ? styles.active : ''}
-                        onClick={() => handleTabClick('reviews')}
+                        className={activeTab === "reviews" ? styles.active : ""}
+                        onClick={() => handleTabClick("reviews")}
                     >
                         리뷰
                     </button>
@@ -737,20 +786,23 @@ const ReservationPage = () => {
                     )}
 
                     <div className={styles.starVisual}>
-                        {
-                            (() => {
-                                const starNum = parseInt(hotel?.star.replace('성', '') || '0', 10);
-                                return '★'.repeat(starNum) + '☆'.repeat(5 - starNum);
-                            })()
-                        }
+                        {(() => {
+                            const starNum = parseInt(
+                                hotel?.star.replace("성", "") || "0",
+                                10
+                            );
+                            return "★".repeat(starNum) + "☆".repeat(5 - starNum);
+                        })()}
                     </div>
                     <div className={styles.facilities}>
                         <div className={styles.serviceInfo}>시설/서비스 요약 정보</div>
                     </div>
                     {hotel?.facilities && (
                         <div className={styles.facilities}>
-                            {hotel.facilities.split(',').map((f, i) => (
-                                <span key={i} className={styles.facility}>{f.trim()}</span>
+                            {hotel.facilities.split(",").map((f, i) => (
+                                <span key={i} className={styles.facility}>
+                                    {f.trim()}
+                                </span>
                             ))}
                         </div>
                     )}
@@ -762,18 +814,20 @@ const ReservationPage = () => {
                 <div>
                     <h3>지도 위치</h3>
                     <div className={styles.mapPreviewBox}>
-
                         {/* 1) 지도 섹션 백엔드 테스트용추가*/}
                         <section className={styles.mapSection}>
-                            <div
-                                ref={mapRef}
-                                className={styles.mapContainer}
-                            />
+                            <div ref={mapRef} className={styles.mapContainer} />
                             <div className={styles.mapAddress}>
                                 {hotel?.address} <br />
                                 <a
                                     className={styles.mapLink}
-                                    href={hotel ? `https://www.google.com/maps?q=${encodeURIComponent(hotel.address)}` : "#"}
+                                    href={
+                                        hotel
+                                            ? `https://www.google.com/maps?q=${encodeURIComponent(
+                                                hotel.address
+                                            )}`
+                                            : "#"
+                                    }
                                     target="_blank"
                                     rel="noopener noreferrer"
                                 >
@@ -787,7 +841,9 @@ const ReservationPage = () => {
 
             <div className={styles.divider}></div>
 
-            <div ref={roomsRef} className={styles.roomInfo}>객실 정보</div>
+            <div ref={roomsRef} className={styles.roomInfo}>
+                객실 정보
+            </div>
             <div className={styles.roomFilters}>
                 <div className={styles.dateBox}>
                     <label className={styles.dateLabel}>입실일</label>
@@ -800,9 +856,9 @@ const ReservationPage = () => {
                         className={styles.dateInput}
                         minDate={new Date()}
                         dayClassName={(date) => {
-                            if (!isFuture(date)) return '';
-                            if (isHoliday(date)) return 'holiday';
-                            if (isWeekend(date)) return 'weekend';
+                            if (!isFuture(date)) return "";
+                            if (isHoliday(date)) return "holiday";
+                            if (isWeekend(date)) return "weekend";
                             return undefined;
                         }}
                     />
@@ -818,9 +874,9 @@ const ReservationPage = () => {
                         className={styles.dateInput}
                         minDate={new Date()}
                         dayClassName={(date) => {
-                            if (!isFuture(date)) return '';
-                            if (isHoliday(date)) return 'holiday';
-                            if (isWeekend(date)) return 'weekend';
+                            if (!isFuture(date)) return "";
+                            if (isHoliday(date)) return "holiday";
+                            if (isWeekend(date)) return "weekend";
                             return undefined;
                         }}
                     />
@@ -831,7 +887,7 @@ const ReservationPage = () => {
                         type="number"
                         min="1"
                         value={bookingPeople}
-                        onChange={e => setBookingPeople(Number(e.target.value))}
+                        onChange={(e) => setBookingPeople(Number(e.target.value))}
                         className={styles.dateInput}
                     />
                 </div>
@@ -894,7 +950,9 @@ const ReservationPage = () => {
 
             <div className={styles.divider}></div>
 
-            <h3 ref={policyRef} className={styles.policyHeader}>요금 및 정책</h3>
+            <h3 ref={policyRef} className={styles.policyHeader}>
+                요금 및 정책
+            </h3>
             <ul className={styles.policyList}>
                 <li>취소 시 취소료: 무료</li>
                 <li>어린이(12세 이하) 무료 투숙</li>
@@ -954,17 +1012,27 @@ const ReservationPage = () => {
                     onChange={(e) => setNewReview(e.target.value)}
                 />
 
-                <button className={styles.reserveBtn} onClick={handleAddReview}>등록하기</button>
+                <button className={styles.reserveBtn} onClick={handleAddReview}>
+                    등록하기
+                </button>
 
-                {(showAllReviews ? reviews : reviews.slice(0, 3)).map(r => (
+                {(showAllReviews ? reviews : reviews.slice(0, 3)).map((r) => (
                     <div key={r.reviewID} className={styles.review}>
-                        <p>{r.rating}/10 {r.comment}</p>
-                        <div className={styles.reviewMeta}>UserID: {r.userID} · {r.commentDate && r.commentDate.split('T')[0]}</div>
+                        <p>
+                            {r.rating}/10 {r.comment}
+                        </p>
+                        <div className={styles.reviewMeta}>
+                            UserID: {r.userID} ·{" "}
+                            {r.commentDate && r.commentDate.split("T")[0]}
+                        </div>
                     </div>
                 ))}
 
                 {reviews.length > 3 && (
-                    <button className={styles.btnMore} onClick={() => setShowAllReviews(!showAllReviews)}>
+                    <button
+                        className={styles.btnMore}
+                        onClick={() => setShowAllReviews(!showAllReviews)}
+                    >
                         {showAllReviews ? "접기" : "더보기"}
                     </button>
                 )}
@@ -998,15 +1066,23 @@ const ReservationPage = () => {
 
                 <div className="footer-bottom">
                     <div className="social-wrapper">
-                        <div className="social-icon" style={{ backgroundImage: `url(${facebook})` }}></div>
-                        <div className="social-icon" style={{ backgroundImage: `url(${instargram})` }}></div>
-                        <div className="social-icon" style={{ backgroundImage: `url(${twitter})` }}></div>
+                        <div
+                            className="social-icon"
+                            style={{ backgroundImage: `url(${facebook})` }}
+                        ></div>
+                        <div
+                            className="social-icon"
+                            style={{ backgroundImage: `url(${instargram})` }}
+                        ></div>
+                        <div
+                            className="social-icon"
+                            style={{ backgroundImage: `url(${twitter})` }}
+                        ></div>
                     </div>
                     <p>© 2025 Stay Manager. All rights reserved.</p>
                 </div>
             </footer>
             {/* Footer */}
-
 
             <Modal
                 isOpen={isGalleryOpen}
@@ -1018,10 +1094,17 @@ const ReservationPage = () => {
                 <h2>전체 사진</h2>
                 <div className={styles.galleryGrid}>
                     {allGalleryImages.map((img, idx) => (
-                        <img key={idx} src={img} alt={`호텔 사진 ${idx + 1}`} className={styles.galleryImg} />
+                        <img
+                            key={idx}
+                            src={img}
+                            alt={`호텔 사진 ${idx + 1}`}
+                            className={styles.galleryImg}
+                        />
                     ))}
                 </div>
-                <button onClick={closeGalleryModal} className={styles.closeBtn}>닫기</button>
+                <button onClick={closeGalleryModal} className={styles.closeBtn}>
+                    닫기
+                </button>
             </Modal>
 
             <Modal
@@ -1041,19 +1124,27 @@ const ReservationPage = () => {
 
                         <div className={styles.roomName}>{selectedRoom.name}</div>
 
-                        {/* ✅ 좌우 나란히 배치할 wrapper 추가 */}
                         <div className={styles.roomDetailsWrapper}>
                             {/* 왼쪽: 스펙 */}
                             <div className={styles.roomSpecs}>
-                                {selectedRoom.specs[0].split(',').map((line, idx) => (
+                                {selectedRoom.specs[0].split(",").map((line, idx) => (
                                     <div key={idx}>- {line.trim()}</div>
                                 ))}
                             </div>
 
                             {/* 오른쪽: 가격 */}
                             <div className={styles.priceBox}>
-                                <div className={styles.modalPrice}>₩{selectedRoom.price.toLocaleString()}</div>
-                                <div className={styles.totalPrice}>총 요금: ₩{getTotalRoomPrice(selectedRoom.price, startDate, endDate).toLocaleString()}</div>
+                                <div className={styles.modalPrice}>
+                                    ₩{selectedRoom.price.toLocaleString()}
+                                </div>
+                                <div className={styles.totalPrice}>
+                                    총 요금: ₩
+                                    {getTotalRoomPrice(
+                                        selectedRoom.price,
+                                        startDate,
+                                        endDate
+                                    ).toLocaleString()}
+                                </div>
                                 <div className={styles.taxNote}>세금 및 수수료 포함</div>
                             </div>
                         </div>
@@ -1087,18 +1178,22 @@ const ReservationPage = () => {
                         <label>결제수단 : </label>
                         <select
                             value={selectedPG}
-                            onChange={e => setSelectedPG(e.target.value)}
+                            onChange={(e) => setSelectedPG(e.target.value)}
                             className={styles.pgSelect}
                         >
-                            {PG_CODES.map(pg => (
+                            {PG_CODES.map((pg) => (
                                 <option key={pg.value} value={pg.value}>
                                     {pg.label}
                                 </option>
                             ))}
                         </select>
                     </div>
-                    <button className={styles.paymentBtn} onClick={handlePayment}>결제하기</button>
-                    <button className={styles.closeBtn} onClick={closeBookingModal}>닫기</button>
+                    <button className={styles.paymentBtn} onClick={handlePayment}>
+                        결제하기
+                    </button>
+                    <button className={styles.closeBtn} onClick={closeBookingModal}>
+                        닫기
+                    </button>
                 </div>
             </Modal>
         </div>

@@ -8,10 +8,11 @@ import {
   Spinner,
   Button,
   useColorModeValue,
+  SimpleGrid,
 } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
 import SeoulDistrictMap from "./SeoulDistrictMap";
-import HotelRecommendModal from "./HotelRecommendModal";
+import TouristAttractionsModal from "./TouristAttractionsModal";
 import { useNavigate } from "react-router-dom";
 
 const gradient = keyframes`
@@ -109,6 +110,7 @@ const AiPage = () => {
   const [recommendResult, setRecommendResult] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false); // 백엔드 모달 오픈
   const navigate = useNavigate(); // 백엔드 뒤로가기
+  const [recommendReason, setRecommendReason] = useState(""); // 추천 이유
 
   const boxHover = useColorModeValue("gray.100", "gray.700");
   const boxStyle = {
@@ -257,9 +259,12 @@ const AiPage = () => {
         }
       );
       if (!aiRes.ok) throw new Error();
+
       const result = await aiRes.json();
       console.log("🔵 AI 추천 결과:", result);
-      setRecommendResult(result); // 1. 추천 결과 세팅
+
+      setRecommendResult(result.recommendedHotels); // 1. 추천 결과 세팅
+      setRecommendReason(generateShortReason());
       setIsModalOpen(true); // 2. 모달창 오픈(팝업)
     } catch (e) {
       console.error("🔴 AI 추천 오류:", e);
@@ -325,6 +330,29 @@ const AiPage = () => {
     navigate("/"); // 또는 "/main" 등 원하는 경로로
   };
 
+  const generateShortReason = () => {
+    const { district, star, parking_lot, capacity, price } = dbAnswers;
+    const { theme, mood, special } = aiAnswers;
+
+    const line1Parts = [];
+    if (district) line1Parts.push(`선택하신 ‘${district}’ 지역의`);
+    if (star) line1Parts.push(`${star}`);
+    if (capacity) line1Parts.push(`${capacity} 기준`);
+    if (price) line1Parts.push(`가격대 ${price}의`);
+    if (parking_lot === "필수") line1Parts.push(`주차 가능한`);
+
+    const line1 = line1Parts.join(" ");
+
+    const line2Parts = [];
+    if (theme) line2Parts.push(`‘${theme}’이며`);
+    if (mood) line2Parts.push(`‘${mood}’ 분위기의`);
+
+    const line2 = line2Parts.join(" ");
+    const line3 = special ? `‘${special}’을(를) 갖춘 위의 호텔들을 추천드립니다.` : `선택 기준에 맞춰 추천했습니다.`;
+
+    return [line1, line2, line3].filter(Boolean).join("\n");
+  };
+
   return (
     <Box
       minH="100vh"
@@ -354,7 +382,7 @@ const AiPage = () => {
         boxShadow="2xl"
         p={8}
         pt={8}
-        pb={1}
+        pb={6}
         minH="600px"
         display="flex"
         flexDirection="column"
@@ -468,59 +496,80 @@ const AiPage = () => {
               ✅ 모든 질문 완료! <br />
               추천을 생성할 수 있습니다.
             </Text>
-            <Text mt={4} fontSize="md" color="gray.600">
-              <b>선택한 지역:</b> {dbAnswers.district} <br />
-              <b>성급:</b> {dbAnswers.star} <br />
-              <b>주차:</b> {dbAnswers.parking_lot} <br />
-              <b>인원:</b> {dbAnswers.capacity} <br />
-              <b>가격:</b> {dbAnswers.price} <br />
-              <b>체크인:</b> {dbAnswers.check_in} <br />
-              <b>테마:</b> {aiAnswers.theme} <br />
-              <b>분위기:</b> {aiAnswers.mood} <br />
-              <b>특별요구:</b> {aiAnswers.special}
-            </Text>
+            {/* 🔽 추천 결과 표시 영역 */}
+            <Box mt={6} mx="auto" maxW="lg">
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={2} fontSize="md" color="gray.700">
+                {dbAnswers.district && (
+                  <Box display="flex">
+                    <Box w="80px" fontWeight="bold">지역</Box>
+                    <Text>: {dbAnswers.district}</Text>
+                  </Box>
+                )}
+                {dbAnswers.star && (
+                  <Box display="flex">
+                    <Box w="80px" fontWeight="bold">등급</Box>
+                    <Text>: {dbAnswers.star}</Text>
+                  </Box>
+                )}
+                {dbAnswers.parking_lot && (
+                  <Box display="flex">
+                    <Box w="80px" fontWeight="bold">주차</Box>
+                    <Text>: {dbAnswers.parking_lot}</Text>
+                  </Box>
+                )}
+                {dbAnswers.capacity && (
+                  <Box display="flex">
+                    <Box w="80px" fontWeight="bold">인원</Box>
+                    <Text>: {dbAnswers.capacity}</Text>
+                  </Box>
+                )}
+                {dbAnswers.price && (
+                  <Box display="flex">
+                    <Box w="80px" fontWeight="bold">가격대</Box>
+                    <Text>: {dbAnswers.price}</Text>
+                  </Box>
+                )}
+                {aiAnswers.theme && (
+                  <Box display="flex">
+                    <Box w="80px" fontWeight="bold">테마</Box>
+                    <Text>: {aiAnswers.theme}</Text>
+                  </Box>
+                )}
+                {aiAnswers.mood && (
+                  <Box display="flex">
+                    <Box w="80px" fontWeight="bold">분위기</Box>
+                    <Text>: {aiAnswers.mood}</Text>
+                  </Box>
+                )}
+                {aiAnswers.special && (
+                  <Box display="flex">
+                    <Box w="80px" fontWeight="bold">특별요구</Box>
+                    <Text>: {aiAnswers.special}</Text>
+                  </Box>
+                )}
+              </SimpleGrid>
+            </Box>
+
+
             <Button
               colorScheme="teal"
               mt={8}
+              ml={20}
+              mr={20}
               size="lg"
               onClick={handleRecommend}
             >
               추천받기
             </Button>
 
-            {/* 추천 결과 출력부 */}
-            {/* 
-            {recommendResult && (
-              <Box mt={8} p={6} borderRadius="lg" boxShadow="md" bg="gray.50">
-                <Text fontWeight="bold" fontSize="xl" color="teal.600" mb={3}>
-                  AI 추천 결과
-                </Text>
-                {recommendResult.bestHotel ? (
-                  <Box>
-                    <Text fontSize="lg">
-                      <b>추천 호텔명:</b> {recommendResult.bestHotel.hotelName}
-                    </Text>
-                    <Text>
-                      <b>주소:</b> {recommendResult.bestHotel.address}
-                    </Text>
-                    <Text>
-                      <b>설명:</b> {recommendResult.bestHotel.description}
-                    </Text>
-                  </Box>
-                ) : (
-                  <Text color="red.400">추천 결과가 없습니다.</Text>
-                )}
-                <Text mt={3} color="gray.500">
-                  {recommendResult.message}
-                </Text>
-                */}
-            <HotelRecommendModal
+            {/* 주변 관광지 모달 */}
+            <TouristAttractionsModal
               isOpen={isModalOpen}
               onClose={() => setIsModalOpen(false)}
-              hotel={recommendResult?.bestHotel}
-              aiMessage={recommendResult?.message}
+              hotels={Array.isArray(recommendResult) ? recommendResult : []}
+              recommendReason={recommendReason}
             />
-            {/* 추천 결과가 떠 있는 상태에서 보이도록 버튼 추가 */}
+
             <Box mt={4} display="flex" gap={4} justifyContent="center">
               <Button
                 colorScheme="gray"

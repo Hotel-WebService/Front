@@ -1,26 +1,26 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { setUserInfo } from '../features/userSlice'; // 경로는 프로젝트 구조에 따라
-import styles from '../css/MyPage.module.css';
-import Modal from 'react-modal';
-import html2canvas from 'html2canvas';
+import React, { useRef, useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { setUserInfo } from "../features/userSlice"; // 경로는 프로젝트 구조에 따라
+import styles from "../css/MyPage.module.css";
+import Modal from "react-modal";
+import html2canvas from "html2canvas";
 
 // 이미지
-import h1 from '../assets/h1.jpg';
-import instargram from '../assets/icon/instargram.jpg';
-import facebook from '../assets/icon/facebook.jpg';
-import twitter from '../assets/icon/twitter.jpg';
+import h1 from "../assets/h1.jpg";
+import instargram from "../assets/icon/instargram.jpg";
+import facebook from "../assets/icon/facebook.jpg";
+import twitter from "../assets/icon/twitter.jpg";
 import { useNavigate } from "react-router-dom";
 
 const MyPage = () => {
   const dispatch = useDispatch();
-  const user = useSelector(state => state.user);
+  const user = useSelector((state) => state.user);
   const [editableUser, setEditableUser] = useState({
-    username: '',
-    email: '',
-    loginPassword: '',
-    punNumber: ''
+    username: "",
+    email: "",
+    loginPassword: "",
+    punNumber: "",
   });
 
   const getRoomImagePath = (hotelId, roomId) => {
@@ -34,7 +34,8 @@ const MyPage = () => {
   };
 
   // 백엔드 임의 결제 내역 팝업창
-  const [isPaymentDetailModalOpen, setIsPaymentDetailModalOpen] = useState(false);
+  const [isPaymentDetailModalOpen, setIsPaymentDetailModalOpen] =
+    useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
 
   // 결제내역 모달 열기 함수
@@ -52,28 +53,28 @@ const MyPage = () => {
     setEditableUser({
       username: user.username,
       email: user.email,
-      loginPassword: '',
-      punNumber: user.punNumber
+      loginPassword: "",
+      punNumber: user.punNumber,
     });
   }, [user]);
 
   useEffect(() => {
-    console.log('📌 현재 사용자 ID:', user.userID); // 이미 있는 로그
+    console.log("📌 현재 사용자 ID:", user.userID); // 이미 있는 로그
 
     if (!user.userID) return;
 
     fetch(`http://localhost:8080/api/payment/user/${user.userID}/details`, {
-      credentials: 'include',
+      credentials: "include",
     })
-      .then(res => {
-        if (!res.ok) throw new Error('결제 내역 불러오기 실패');
+      .then((res) => {
+        if (!res.ok) throw new Error("결제 내역 불러오기 실패");
         return res.json();
       })
-      .then(data => {
+      .then((data) => {
         console.log("🔍 전체 응답 구조:", JSON.stringify(data, null, 2));
         setPayments(Array.isArray(data) ? data : []);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("결제 내역 오류:", err);
         setPayments([]);
       });
@@ -81,7 +82,7 @@ const MyPage = () => {
 
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
-  Modal.setAppElement('#root');
+  Modal.setAppElement("#root");
 
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const navigate = useNavigate();
@@ -115,31 +116,39 @@ const MyPage = () => {
     // 만약 오늘 >= 체크아웃 다음날이면
     if (today >= nextDay) {
       await fetch(`http://localhost:8080/api/room-quantity/checkout-complete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomID, date: checkOutDate }) // date는 체크아웃 날짜!
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomID, date: checkOutDate }), // date는 체크아웃 날짜!
       });
     }
   };
 
   // 삭제 함수
-  const handleCancel = async (paymentId, roomID, checkInDate, reservationID) => {
+  const handleCancel = async (
+    paymentId,
+    roomID,
+    checkInDate,
+    reservationID
+  ) => {
     if (!reservationID) {
-      alert('예약 ID가 없습니다.');
+      alert("예약 ID가 없습니다.");
       return;
     }
 
     try {
-      const res = await fetch(`http://localhost:8080/api/reservation/${reservationID}`, {
-        method: 'DELETE',
-      });
-      if (!res.ok) throw new Error('삭제 실패');
+      const res = await fetch(
+        `http://localhost:8080/api/reservation/${reservationID}`,
+        {
+          method: "DELETE",
+        }
+      );
+      if (!res.ok) throw new Error("삭제 실패");
       // UI 등 후처리
-      setPayments((prev) => prev.filter(p => p.paymentID !== paymentId));
+      setPayments((prev) => prev.filter((p) => p.paymentID !== paymentId));
 
-      alert('예약이 취소되었습니다.');
+      alert("예약이 취소되었습니다.");
     } catch (err) {
-      alert('예약 취소 중 오류가 발생했습니다.');
+      alert("예약 취소 중 오류가 발생했습니다.");
     }
   };
 
@@ -147,28 +156,28 @@ const MyPage = () => {
   const handleCaptureAndCopy = async () => {
     try {
       const canvas = await html2canvas(reservationRef.current, {
-        useCORS: true,  // 외부 이미지 대응
-        scale: 2        // 고화질
+        useCORS: true, // 외부 이미지 대응
+        scale: 2, // 고화질
       });
 
       canvas.toBlob(async (blob) => {
         if (navigator.clipboard && blob) {
           try {
             await navigator.clipboard.write([
-              new ClipboardItem({ 'image/png': blob })
+              new ClipboardItem({ "image/png": blob }),
             ]);
-            alert('이미지가 클립보드에 복사되었습니다!');
+            alert("이미지가 클립보드에 복사되었습니다!");
           } catch (err) {
-            alert('복사 실패: 보안 정책 또는 브라우저 제한일 수 있습니다.');
+            alert("복사 실패: 보안 정책 또는 브라우저 제한일 수 있습니다.");
             console.error(err);
           }
         } else {
-          alert('클립보드 API를 지원하지 않는 브라우저입니다.');
+          alert("클립보드 API를 지원하지 않는 브라우저입니다.");
         }
       });
     } catch (err) {
-      console.error('캡처 실패:', err);
-      alert('예약 정보를 캡처하는 데 실패했습니다.');
+      console.error("캡처 실패:", err);
+      alert("예약 정보를 캡처하는 데 실패했습니다.");
     }
   };
 
@@ -177,12 +186,12 @@ const MyPage = () => {
     try {
       const canvas = await html2canvas(reservationRef.current, {
         useCORS: true,
-        scale: 2
+        scale: 2,
       });
-      const dataUrl = canvas.toDataURL('image/png');
+      const dataUrl = canvas.toDataURL("image/png");
       setPreviewImage(dataUrl);
     } catch (err) {
-      console.error('미리보기 캡처 실패:', err);
+      console.error("미리보기 캡처 실패:", err);
     }
   };
 
@@ -193,24 +202,26 @@ const MyPage = () => {
 
   // 1) 마운트 시 사용자 정보 가져오기 백엔드추가
   useEffect(() => {
-    fetch('http://localhost:8080/api/userinfo', {
-      method: 'GET',
-      credentials: 'include',
+    fetch("http://localhost:8080/api/userinfo", {
+      method: "GET",
+      credentials: "include",
     })
-      .then(res => {
-        if (!res.ok) throw new Error('세션 정보 불러오기 실패');
+      .then((res) => {
+        if (!res.ok) throw new Error("세션 정보 불러오기 실패");
         return res.json();
       })
-      .then(data => {
-        dispatch(setUserInfo({
-          userID: data.userID,
-          username: data.name,
-          email: data.email,
-          loginID: data.loginID,
-          punNumber: data.punNumber,
-        }));
+      .then((data) => {
+        dispatch(
+          setUserInfo({
+            userID: data.userID,
+            username: data.name,
+            email: data.email,
+            loginID: data.loginID,
+            punNumber: data.punNumber,
+          })
+        );
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
         setIsAuthenticated(false);
       });
@@ -219,31 +230,31 @@ const MyPage = () => {
   // 2) input 값 바뀔 때마다 상태 업데이트, 백엔드수정
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setEditableUser(prev => ({ ...prev, [name]: value }));
+    setEditableUser((prev) => ({ ...prev, [name]: value }));
   };
 
   // 3) 수정하기 버튼 눌렀을 때 백엔드에 PUT, 백엔드 수정
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    fetch('http://localhost:8080/api/userinfo', {
-      method: 'PUT',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+    fetch("http://localhost:8080/api/userinfo", {
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: editableUser.username,
         email: editableUser.email,
         loginPassword: editableUser.loginPassword,
         punNumber: editableUser.punNumber,
-      })
+      }),
     })
-      .then(res => res.json())
-      .then(data => {
-        if (data.status === 'success') {
-          alert('회원정보가 수정되었습니다.');
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "success") {
+          alert("회원정보가 수정되었습니다.");
           dispatch(setUserInfo(editableUser)); // 최신값으로 다시 Redux에 반영
         } else {
-          alert('수정에 실패했습니다.');
+          alert("수정에 실패했습니다.");
         }
       });
   };
@@ -251,14 +262,14 @@ const MyPage = () => {
   // 백엔드 로그아웃 추가
   const handleLogout = async () => {
     try {
-      await fetch('http://localhost:8080/logout', {
-        method: 'POST',
-        credentials: 'include'
+      await fetch("http://localhost:8080/logout", {
+        method: "POST",
+        credentials: "include",
       });
       setIsAuthenticated(false);
-      navigate('/');  // 로그아웃 후 홈으로
+      navigate("/"); // 로그아웃 후 홈으로
     } catch (e) {
-      console.error('로그아웃 실패', e);
+      console.error("로그아웃 실패", e);
     }
   };
 
@@ -273,10 +284,9 @@ const MyPage = () => {
           <a>{user.username}님</a>
           <a href="/myPage">MyPage</a>
           <a href="/savedPage">찜 목록</a>
-          <Link to="/"
-            onClick={handleLogout}
-            className={styles.logoutLink}
-          >로그아웃</Link>
+          <Link to="/" onClick={handleLogout} className={styles.logoutLink}>
+            로그아웃
+          </Link>
         </div>
       </header>
       {/* Header */}
@@ -292,56 +302,78 @@ const MyPage = () => {
 
       <h2 className={styles.h2}>나의 예약현황</h2>
 
-      {payments.length === 0 ? (
+      {payments.filter((pay) => pay.payment_status === "Y").length === 0 ? (
         <p className={styles.noReservation}>결제된 예약이 없습니다.</p>
       ) : (
-        payments.map(pay => (
-          <div key={pay.paymentID} className={styles.reservationWrapper}>
-            <div className={styles.reservationCard} ref={reservationRef} onClick={() => navigate(`/reservationPage/${pay.hotelID}`)} style={{ cursor: 'pointer' }}>
-              <img src={getRoomImagePath(pay.hotelID, pay.roomID)} alt="방 이미지" />
-              <div className={styles.reservationInfo}>
-                <div className={styles.sb}>
-                  <h3 className={styles.hotelName}>{pay.hotelName}</h3>
-                  <p className={styles.reserverName}>예약자: {user.username}</p>
-                </div>
-                <div className={styles.sb}>
-                  <p className={styles.roomName}>객실명: {pay.roomName}</p>
-                  <p className={styles.payDate}>결제일자: {pay.pay_date?.slice(0, 10)}</p>
-                </div>
-                <div className={styles.sb}>
-                  <p>결제수단: {pay.payment_method}</p>
-                  <p>결제상태: {pay.payment_status}</p>
-                </div>
-                <div className={styles.sb}>
-                  <p>결제 금액: ₩{Number(pay.amount).toLocaleString()}</p>
+        payments
+          .filter((pay) => pay.payment_status === "Y")
+          .map((pay) => (
+            <div key={pay.paymentID} className={styles.reservationWrapper}>
+              <div
+                className={styles.reservationCard}
+                ref={reservationRef}
+                onClick={() => navigate(`/reservationPage/${pay.hotelID}`)}
+                style={{ cursor: "pointer" }}
+              >
+                <img
+                  src={getRoomImagePath(pay.hotelID, pay.roomID)}
+                  alt="방 이미지"
+                />
+                <div className={styles.reservationInfo}>
+                  <div className={styles.sb}>
+                    <h3 className={styles.hotelName}>{pay.hotelName}</h3>
+                    <p className={styles.reserverName}>
+                      예약자: {user.username}
+                    </p>
+                  </div>
+                  <div className={styles.sb}>
+                    <p className={styles.roomName}>객실명: {pay.roomName}</p>
+                    <p className={styles.payDate}>
+                      결제일자: {pay.pay_date?.slice(0, 10)}
+                    </p>
+                  </div>
+                  <div className={styles.sb}>
+                    <p>결제수단: {pay.payment_method}</p>
+                    <p>결제상태: {pay.payment_status}</p>
+                  </div>
+                  <div className={styles.sb}>
+                    <p>결제 금액: ₩{Number(pay.amount).toLocaleString()}</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className={styles.cardButtons}>
-              <button onClick={openShareModal}>공유하기</button>
-              <button onClick={() => openPaymentDetailModal(pay)}>결제내역</button>
-              <button
-                onClick={() => {
-                  setCancelTarget({
-                    paymentID: pay.paymentID,
-                    roomID: pay.roomID,
-                    checkInDate: pay.check_in_date,
-                    reservationID: pay.reservationID,
-                  });
-                  setIsConfirmModalOpen(true);
-                }}
-                disabled={!isCancelable(pay.check_in_date, pay.check_out_date)}
-                style={{
-                  opacity: isCancelable(pay.check_in_date, pay.check_out_date) ? 1 : 0.5,
-                  cursor: isCancelable(pay.check_in_date, pay.check_out_date) ? 'pointer' : 'not-allowed',
-                }}
-              >
-                예약취소
-              </button>
+              <div className={styles.cardButtons}>
+                <button onClick={openShareModal}>공유하기</button>
+                <button onClick={() => openPaymentDetailModal(pay)}>
+                  결제내역
+                </button>
+                <button
+                  onClick={() => {
+                    setCancelTarget({
+                      paymentID: pay.paymentID,
+                      roomID: pay.roomID,
+                      checkInDate: pay.check_in_date,
+                      reservationID: pay.reservationID,
+                    });
+                    setIsConfirmModalOpen(true);
+                  }}
+                  disabled={
+                    !isCancelable(pay.check_in_date, pay.check_out_date)
+                  }
+                  style={{
+                    opacity: isCancelable(pay.check_in_date, pay.check_out_date)
+                      ? 1
+                      : 0.5,
+                    cursor: isCancelable(pay.check_in_date, pay.check_out_date)
+                      ? "pointer"
+                      : "not-allowed",
+                  }}
+                >
+                  예약취소
+                </button>
+              </div>
             </div>
-          </div>
-        ))
+          ))
       )}
 
       <div className={styles.divider}></div>
@@ -350,25 +382,46 @@ const MyPage = () => {
 
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.halfGroup}>
-          <label>이름
-            <input type="text" name="name" value={editableUser.username} onChange={handleChange} />
+          <label>
+            이름
+            <input
+              type="text"
+              name="name"
+              value={editableUser.username}
+              onChange={handleChange}
+            />
           </label>
         </div>
 
         <div className={styles.halfGroup}>
-          <label>이메일
-            <input type="email" name="email" value={editableUser.email} onChange={handleChange} className="full-width" />
+          <label>
+            이메일
+            <input
+              type="email"
+              name="email"
+              value={editableUser.email}
+              onChange={handleChange}
+              className="full-width"
+            />
           </label>
         </div>
 
         <div className={styles.halfGroup}>
-          <label>아이디
-            <input type="text" name="loginID" value={user.loginID} onChange={handleChange} className="full-width" />
+          <label>
+            아이디
+            <input
+              type="text"
+              name="loginID"
+              value={user.loginID}
+              onChange={handleChange}
+              className="full-width"
+            />
           </label>
         </div>
 
         <div className={styles.halfGroup}>
-          <label>비밀번호
+          <label>
+            비밀번호
             {isPasswordEditing ? (
               <input
                 type="password"
@@ -391,7 +444,8 @@ const MyPage = () => {
 
         <div className={styles.inlineGroup}>
           <div className={styles.halfGroup}>
-            <label>전화번호
+            <label>
+              전화번호
               <input
                 type="text"
                 name="punNumber"
@@ -402,7 +456,9 @@ const MyPage = () => {
             </label>
           </div>
 
-          <button type="submit" className={styles.submitBtn}>수정하기</button>
+          <button type="submit" className={styles.submitBtn}>
+            수정하기
+          </button>
         </div>
       </form>
 
@@ -434,9 +490,18 @@ const MyPage = () => {
 
         <div className="footer-bottom">
           <div className="social-wrapper">
-            <div className="social-icon" style={{ backgroundImage: `url(${facebook})` }}></div>
-            <div className="social-icon" style={{ backgroundImage: `url(${instargram})` }}></div>
-            <div className="social-icon" style={{ backgroundImage: `url(${twitter})` }}></div>
+            <div
+              className="social-icon"
+              style={{ backgroundImage: `url(${facebook})` }}
+            ></div>
+            <div
+              className="social-icon"
+              style={{ backgroundImage: `url(${instargram})` }}
+            ></div>
+            <div
+              className="social-icon"
+              style={{ backgroundImage: `url(${twitter})` }}
+            ></div>
           </div>
           <p>© 2025 Stay Manager. All rights reserved.</p>
         </div>
@@ -453,14 +518,22 @@ const MyPage = () => {
         <h2>공유하기</h2>
         {previewImage && (
           <div className={styles.previewBox}>
-            <p style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>캡처 미리보기</p>
-            <img src={previewImage} alt="예약정보 미리보기" className={styles.previewImage} />
+            <p style={{ fontSize: "0.9rem", marginBottom: "0.5rem" }}>
+              캡처 미리보기
+            </p>
+            <img
+              src={previewImage}
+              alt="예약정보 미리보기"
+              className={styles.previewImage}
+            />
           </div>
         )}
         <button onClick={handleCaptureAndCopy} className={styles.copyBtn}>
           예약정보 캡처해서 복사
         </button>
-        <button onClick={closeShareModal} className={styles.closeBtn}>닫기</button>
+        <button onClick={closeShareModal} className={styles.closeBtn}>
+          닫기
+        </button>
       </Modal>
 
       <Modal
@@ -473,21 +546,46 @@ const MyPage = () => {
         <h2>결제 상세 내역</h2>
         {selectedPayment && (
           <div className={styles.paymentDetailBox}>
-            <p><b>예약자:</b> {user.username}</p>
-            <p><b>이메일:</b> {user.email}</p>
-            <p><b>번호:</b> {user.punNumber}</p>
-            <p><b>호텔명:</b> {selectedPayment.hotelName}</p>
-            <p><b>객실명:</b> {selectedPayment.roomName}</p>
-            <p><b>결제금액:</b> ₩{Number(selectedPayment.amount).toLocaleString()}</p>
-            <p><b>결제수단:</b> {selectedPayment.payment_method}</p>
-            <p><b>결제상태:</b> {selectedPayment.payment_status}</p>
-            <p><b>결제일자:</b> {selectedPayment.pay_date?.slice(0, 10)}</p>
-            <p><b>체크인:</b> {selectedPayment.check_in_date}</p>
-            <p><b>체크아웃:</b> {selectedPayment.check_out_date}</p>
+            <p>
+              <b>예약자:</b> {user.username}
+            </p>
+            <p>
+              <b>이메일:</b> {user.email}
+            </p>
+            <p>
+              <b>번호:</b> {user.punNumber}
+            </p>
+            <p>
+              <b>호텔명:</b> {selectedPayment.hotelName}
+            </p>
+            <p>
+              <b>객실명:</b> {selectedPayment.roomName}
+            </p>
+            <p>
+              <b>결제금액:</b> ₩
+              {Number(selectedPayment.amount).toLocaleString()}
+            </p>
+            <p>
+              <b>결제수단:</b> {selectedPayment.payment_method}
+            </p>
+            <p>
+              <b>결제상태:</b> {selectedPayment.payment_status}
+            </p>
+            <p>
+              <b>결제일자:</b> {selectedPayment.pay_date?.slice(0, 10)}
+            </p>
+            <p>
+              <b>체크인:</b> {selectedPayment.check_in_date}
+            </p>
+            <p>
+              <b>체크아웃:</b> {selectedPayment.check_out_date}
+            </p>
             {/* 필요시 paymentID 등 추가 가능 */}
           </div>
         )}
-        <button onClick={closePaymentDetailModal} className={styles.closeBtn}>닫기</button>
+        <button onClick={closePaymentDetailModal} className={styles.closeBtn}>
+          닫기
+        </button>
       </Modal>
 
       <Modal
@@ -497,9 +595,15 @@ const MyPage = () => {
         className={styles.confirmModal}
         overlayClassName={styles.overlay}
       >
-        <h3 style={{ fontSize: '1.1rem' }}>예약을 취소하시겠습니까?</h3>
+        <h3 style={{ fontSize: "1.1rem" }}>예약을 취소하시겠습니까?</h3>
 
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1.2rem' }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            marginTop: "1.2rem",
+          }}
+        >
           <button
             className={styles.confirmBtn}
             onClick={() => {
