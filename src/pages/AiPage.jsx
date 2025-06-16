@@ -14,6 +14,8 @@ import { keyframes } from "@emotion/react";
 import SeoulDistrictMap from "./SeoulDistrictMap";
 import TouristAttractionsModal from "./TouristAttractionsModal";
 import { useNavigate } from "react-router-dom";
+import { IconButton } from "@chakra-ui/react";
+import { CloseIcon } from "@chakra-ui/icons";
 
 const gradient = keyframes`
   0% { background-position: 0% 50%; }
@@ -163,6 +165,7 @@ const AiPage = () => {
     setDbAnswers((prev) => ({ ...prev, district }));
     setStep((prev) => prev + 1);
   };
+
 
   const handleRecommend = async () => {
     if (!userId) {
@@ -362,6 +365,20 @@ const AiPage = () => {
       bgGradient="linear(to-r, gray.300, gray.700, gray.500)"
       backgroundSize="300% 300%"
     >
+      <IconButton
+        icon={<CloseIcon />}
+        aria-label="나가기"
+        variant="solid"
+        bgColor="gray.50"
+        color="gray.700"
+        size="md"
+        onClick={handleGoBackToFirstPage}
+        position="absolute"
+        top="30px"
+        right="60px"
+        opacity="0.2"
+        zIndex={10}
+      />
       <Heading
         textAlign="center"
         fontSize="5xl"
@@ -485,101 +502,109 @@ const AiPage = () => {
 
         {/* 모든 질문 끝나면 결과 + 추천 + 추천결과 */}
         {step === totalSteps && (
-          <Box
-            flex="1"
-            display="flex"
-            flexDirection="column"
-            justifyContent="center"
-            textAlign="center"
-          >
-            <Text fontSize="xl" color="teal.500" fontWeight="bold">
-              ✅ 모든 질문 완료! <br />
-              추천을 생성할 수 있습니다.
-            </Text>
-            {/* 🔽 추천 결과 표시 영역 */}
-            <Box mt={6} mx="auto" maxW="lg">
-              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={2} fontSize="md" color="gray.700">
-                {dbAnswers.district && (
-                  <Box display="flex">
-                    <Box w="80px" fontWeight="bold">지역</Box>
-                    <Text>: {dbAnswers.district}</Text>
-                  </Box>
-                )}
-                {dbAnswers.star && (
-                  <Box display="flex">
-                    <Box w="80px" fontWeight="bold">등급</Box>
-                    <Text>: {dbAnswers.star}</Text>
-                  </Box>
-                )}
-                {dbAnswers.parking_lot && (
-                  <Box display="flex">
-                    <Box w="80px" fontWeight="bold">주차</Box>
-                    <Text>: {dbAnswers.parking_lot}</Text>
-                  </Box>
-                )}
-                {dbAnswers.capacity && (
-                  <Box display="flex">
-                    <Box w="80px" fontWeight="bold">인원</Box>
-                    <Text>: {dbAnswers.capacity}</Text>
-                  </Box>
-                )}
-                {dbAnswers.price && (
-                  <Box display="flex">
-                    <Box w="80px" fontWeight="bold">가격대</Box>
-                    <Text>: {dbAnswers.price}</Text>
-                  </Box>
-                )}
-                {aiAnswers.theme && (
-                  <Box display="flex">
-                    <Box w="80px" fontWeight="bold">테마</Box>
-                    <Text>: {aiAnswers.theme}</Text>
-                  </Box>
-                )}
-                {aiAnswers.mood && (
-                  <Box display="flex">
-                    <Box w="80px" fontWeight="bold">분위기</Box>
-                    <Text>: {aiAnswers.mood}</Text>
-                  </Box>
-                )}
-                {aiAnswers.special && (
-                  <Box display="flex">
-                    <Box w="80px" fontWeight="bold">특별요구</Box>
-                    <Text>: {aiAnswers.special}</Text>
-                  </Box>
-                )}
-              </SimpleGrid>
-            </Box>
-
-
-            <Button
-              colorScheme="teal"
-              mt={8}
-              ml={20}
-              mr={20}
-              size="lg"
-              onClick={handleRecommend}
+          <Box position="relative">
+            <Box
+              flex="1"
+              display="flex"
+              flexDirection="column"
+              justifyContent="center"
+              textAlign="center"
             >
-              추천받기
-            </Button>
 
-            {/* 주변 관광지 모달 */}
-            <TouristAttractionsModal
-              isOpen={isModalOpen}
-              onClose={() => setIsModalOpen(false)}
-              hotels={Array.isArray(recommendResult) ? recommendResult : []}
-              recommendReason={recommendReason}
-            />
+              <Text fontSize="xl" color="teal.500" fontWeight="bold" mt="12">
+                ✅ 모든 질문 완료! <br />
+                추천을 생성할 수 있습니다.
+              </Text>
+              {/* 🔽 추천 결과 표시 영역 */}
 
-            <Box mt={4} display="flex" gap={4} justifyContent="center">
+              <Box mt={10} mx="auto" maxW="lg" bg="gray.100" p="7" border="1px solid" borderColor="gray.300">
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} fontSize="md" color="gray.700">
+                  {dbAnswers.district && (
+                    <Box display="flex">
+                      <Box w="80px" fontWeight="bold">지역</Box>
+                      <Text>: {dbAnswers.district}</Text>
+                    </Box>
+                  )}
+                  {dbAnswers.star && (
+                    <Box display="flex">
+                      <Box w="80px" fontWeight="bold">등급</Box>
+                      <Text>: {dbAnswers.star}</Text>
+                    </Box>
+                  )}
+                  {dbAnswers.parking_lot && (
+                    <Box display="flex">
+                      <Box w="80px" fontWeight="bold">주차</Box>
+                      <Text>: {dbAnswers.parking_lot}</Text>
+                    </Box>
+                  )}
+                  {dbAnswers.capacity && (
+                    <Box display="flex">
+                      <Box w="80px" fontWeight="bold">인원</Box>
+                      <Text>: {dbAnswers.capacity}</Text>
+                    </Box>
+                  )}
+                  {dbAnswers.price && (
+                    <Box display="flex">
+                      <Box w="80px" fontWeight="bold">가격대</Box>
+                      <Text>: {dbAnswers.price}</Text>
+                    </Box>
+                  )}
+                  {aiAnswers.theme && (
+                    <Box display="flex">
+                      <Box w="80px" fontWeight="bold">테마</Box>
+                      <Text>: {aiAnswers.theme}</Text>
+                    </Box>
+                  )}
+                  {aiAnswers.mood && (
+                    <Box display="flex">
+                      <Box w="80px" fontWeight="bold">분위기</Box>
+                      <Text>: {aiAnswers.mood}</Text>
+                    </Box>
+                  )}
+                  {aiAnswers.special && (
+                    <Box display="flex">
+                      <Box w="80px" fontWeight="bold">특별요구</Box>
+                      <Text>: {aiAnswers.special}</Text>
+                    </Box>
+                  )}
+                </SimpleGrid>
+              </Box>
+
+
               <Button
+                colorScheme="teal"
+                mt={10}
+                ml={24}
+                mr={24}
+                size="lg"
+                onClick={handleRecommend}
+              >
+                추천받기
+              </Button>
+
+              {/* 주변 관광지 모달 */}
+              <TouristAttractionsModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                hotels={Array.isArray(recommendResult) ? recommendResult : []}
+                recommendReason={recommendReason}
+              />
+              {/* <Button
                 colorScheme="gray"
                 variant="outline"
                 onClick={handleGoBackToFirstPage}
               >
-                뒤로가기
-              </Button>
-              <Button colorScheme="red" onClick={handleGoToStart}>
-                맨처음으로
+                나가기
+              </Button> */}
+              <Button
+                colorScheme="blue"
+                ml={24}
+                mr={24}
+                mt={2}
+                size="lg"
+                onClick={handleGoToStart}
+              >
+                다시하기
               </Button>
             </Box>
           </Box>

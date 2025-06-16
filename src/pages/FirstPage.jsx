@@ -14,6 +14,8 @@ import { setLogin, setLogout } from '../features/userSlice';
 import { setDestination, setDates, setPeople } from '../features/searchSlice';
 import { setLocation, setCheckin, setCheckout, setGuests } from '../features/reservationSlice';
 import { Button, useToast } from '@chakra-ui/react';
+import FooterModal from "../pages/FooterModal";
+import { useDisclosure } from "@chakra-ui/react";
 
 // 이미지
 import heroImage from '../assets/firstPage/firstPage.jpg';
@@ -113,6 +115,14 @@ const FirstPage = () => {
   };
 
   const toast = useToast();
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [modalType, setModalType] = useState(null);
+
+  const openModal = (type) => {
+    setModalType(type);
+    onOpen();
+  };
 
   return (
     <div>
@@ -344,8 +354,8 @@ const FirstPage = () => {
             <div className="footer-section">
               <h4>지원</h4>
               <ul>
-                <li>자주 묻는 질문</li>
-                <li>연락처</li>
+                <li onClick={() => openModal("faq")} style={{ cursor: "pointer" }}>자주 묻는 질문</li>
+                <li onClick={() => openModal("contact")} style={{ cursor: "pointer" }}>연락처</li>
               </ul>
             </div>
 
@@ -367,6 +377,8 @@ const FirstPage = () => {
           </div>
           <p>© 2025 Stay Manager. All rights reserved.</p>
         </div>
+
+        <FooterModal type={modalType} isOpen={isOpen} onClose={onClose} />
       </footer>
       {/* Footer */}
     </div>

@@ -14,6 +14,7 @@ export default function SeoulDistrictMap({ onDistrictClick, onDistrictHover }) {
       level: 9,
     };
     const map = new kakao.maps.Map(container, options);
+    map.setZoomable(false);
 
     const polygons = [];
     const districtPolygons = {};
@@ -52,6 +53,7 @@ export default function SeoulDistrictMap({ onDistrictClick, onDistrictHover }) {
           // 👇 구에 마우스 올라오면 콜백 호출
           if (onDistrictHover) onDistrictHover(name);
         });
+
         kakao.maps.event.addListener(polygon, "mouseout", () => {
           districtPolygons[name].forEach((poly) =>
             poly.setOptions({ fillColor: "#fff" })
