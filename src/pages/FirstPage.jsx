@@ -12,7 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from 'react-redux';
 import { setLogin, setLogout } from '../features/userSlice';
 import { setDestination, setDates, setPeople } from '../features/searchSlice';
-import { setLocation, setCheckin, setCheckout, setGuests } from '../features/reservationSlice';
+import { setCheckin, setCheckout, setGuests } from '../features/reservationSlice';
 import { Button, useToast } from '@chakra-ui/react';
 import FooterModal from "../pages/FooterModal";
 import { useDisclosure } from "@chakra-ui/react";
@@ -37,7 +37,8 @@ const FirstPage = () => {
   const search = useSelector(state => state.search);
   const dispatch = useDispatch();
   const { isAuthenticated, username } = useSelector((state) => state.user);
-  const { location, checkin, checkout, guests } = useSelector((state) => state.reservation);
+  const { checkin, checkout, guests } = useSelector((state) => state.reservation);
+  const destination = useSelector((state) => state.search.destination);
 
   const mapRef = useRef(null);
   const navigate = useNavigate(); // 백엔드 추가
@@ -164,9 +165,9 @@ const FirstPage = () => {
             <label htmlFor="location">목적지</label>
             <input
               type="text"
-              id="location"
-              value={location}
-              onChange={(e) => dispatch(setLocation(e.target.value))}
+              id="destination"
+              value={destination}
+              onChange={(e) => dispatch(setDestination(e.target.value))}
             />
           </div>
 
@@ -229,7 +230,7 @@ const FirstPage = () => {
               mt={4}
               w="100%"
               onClick={() => {
-                dispatch(setDestination(location));
+                dispatch(setDestination(destination));
                 dispatch(setDates({ startDate: checkin, endDate: checkout }));
                 dispatch(setPeople(guests));
               }}

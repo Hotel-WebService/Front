@@ -975,10 +975,15 @@ const ReservationPage = () => {
                 요금 및 정책
             </h3>
             <ul className={styles.policyList}>
-                <li>취소 시 취소료: 무료</li>
-                <li>어린이(12세 이하) 무료 투숙</li>
-                <li>반려동물 동반 불가</li>
-                <li>보증금: KRW 150,000 (체크인 시 결제)</li>
+                {hotel?.price_policy ? (
+                    hotel.price_policy
+                        .split("\n")
+                        .map((line, idx) =>
+                            line.trim() ? <li key={idx}>{line.trim()}</li> : null
+                        )
+                ) : (
+                    <li>등록된 정책 정보가 없습니다.</li>
+                )}
             </ul>
 
             <div className={styles.divider}></div>

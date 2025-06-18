@@ -5,13 +5,8 @@ const ScrollToTop = () => {
     const { pathname } = useLocation();
 
     useEffect(() => {
-        // 히스토리 복원 방지
-        if ("scrollRestoration" in window.history) {
-            window.history.scrollRestoration = "manual";
-        }
-
-        // 무조건 최상단 이동
-        window.scrollTo(0, 0);
+        // pathname이 실제로 바뀔 때만
+        window.scrollTo({ top: 0, behavior: "smooth" });
     }, [pathname]);
 
     return null;

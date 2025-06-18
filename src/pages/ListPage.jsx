@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setUserInfo, updateUserInfo } from '../features/userSlice';
 import { setSortOption, setFilters, toggleService } from '../features/filterSlice';
@@ -29,6 +29,8 @@ const ListPage = () => {
   const likedHotels = useSelector(state => state.likedHotels);
   const [allReviews, setAllReviews] = useState([]);
   const [searchTriggeredDestination, setSearchTriggeredDestination] = useState(null);
+  const listRef = useRef(null);
+  const [inputDestination, setInputDestination] = useState("");
 
   const { dateRange } = useSelector(state => state.reservation);
   const user = useSelector(state => state.user);
@@ -146,6 +148,19 @@ const ListPage = () => {
     fetchUserLikes();
   }, [user.userID]);
 
+  const handleInputChange = (e) => {
+    setInputDestination(e.target.value);
+  };
+
+  const handleSearch = () => {
+    dispatch(setDestination(inputDestination));
+    fetchHotels(inputDestination);
+  };
+
+  const fetchHotels = (dest) => {
+    setSearchTriggeredDestination(dest); // 검색 트리거용 목적지 설정
+  };
+
   const handleLike = async (hotel) => {
     if (!user.userID) return alert("로그인이 필요합니다!");
     const isLiked = likedHotels.includes(hotel.id);
@@ -205,10 +220,6 @@ const ListPage = () => {
 
   const handleServiceChange = (e) => {
     dispatch(toggleService(e.target.value));
-  };
-
-  const handleSearchClick = () => {
-    setSearchTriggeredDestination(destination);
   };
 
   // 1) 마운트 시 사용자 정보 가져오기 백엔드추가
@@ -277,10 +288,34 @@ const ListPage = () => {
   };
 
   useEffect(() => {
-    if (destination) {
-      setSearchTriggeredDestination(destination);
+    const navType = performance.getEntriesByType("navigation")[0].type;
+
+    return () => {
+      if (navType === "back_forward" || navType === "reload") {
+        setSearchTriggeredDestination(null);
+        dispatch(setDestination(""));
+        dispatch(setFilters({
+          services: [],
+          star: null,
+          price: 1000000,
+        }));
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (searchTriggeredDestination && listRef.current) {
+      listRef.current.scrollIntoView({ behavior: "instant", block: "start" });
     }
-  }, [destination]);
+  }, [searchTriggeredDestination]);
+
+  useEffect(() => {
+    // destination이 있을 경우에만 최초 1회 검색 트리거
+    if (destination && searchTriggeredDestination === null) {
+      setSearchTriggeredDestination(destination);
+      setInputDestination(destination);
+    }
+  }, [destination, searchTriggeredDestination]);
 
   // 백엔드 로그아웃 추가
   const handleLogout = async () => {
@@ -377,8 +412,8 @@ const ListPage = () => {
       <div className={styles.searchBox}>
         <input
           type="text"
-          value={destination}
-          onChange={(e) => dispatch(setDestination(e.target.value))}
+          value={inputDestination}
+          onChange={handleInputChange}
           placeholder="목적지"
           className={styles.input}
         />
@@ -410,7 +445,7 @@ const ListPage = () => {
           className={styles.peopleInput}
         />
 
-        <button onClick={handleSearchClick}>
+        <button onClick={handleSearch}>
           <img src={search} alt="검색" />
         </button>
 
@@ -426,17 +461,17 @@ const ListPage = () => {
             <div className={styles.filteringTitle}>
               <h5>서비스</h5>
               <ul>
-                <li><label><input type="checkbox" value="바" onChange={handleServiceChange} />바</label></li>
-                <li><label><input type="checkbox" value="레스토랑" onChange={handleServiceChange} />레스토랑</label></li>
-                <li><label><input type="checkbox" value="피트니스 센터" onChange={handleServiceChange} />피트니스 센터</label></li>
-                <li><label><input type="checkbox" value="수영장" onChange={handleServiceChange} />수영장</label></li>
-                <li><label><input type="checkbox" value="무료 주차" onChange={handleServiceChange} />무료 주차</label></li>
-                <li><label><input type="checkbox" value="세탁 시설" onChange={handleServiceChange} />세탁 시설</label></li>
-                <li><label><input type="checkbox" value="공항 교통편" onChange={handleServiceChange} />공항 교통편</label></li>
-                <li><label><input type="checkbox" value="전기차 충전소" onChange={handleServiceChange} />전기차 충전소</label></li>
-                <li><label><input type="checkbox" value="카지노" onChange={handleServiceChange} />카지노</label></li>
-                <li><label><input type="checkbox" value="반려동물 동반 가능" onChange={handleServiceChange} />반려동물 동반 가능</label></li>
-                <li><label><input type="checkbox" value="매일 24시간 프런트데스크 운영" onChange={handleServiceChange} />매일 24시간 프런트데스크 운영</label></li>
+                <li><label><input type="checkbox" value="바" checked={filters.services.includes("바")} onChange={handleServiceChange} />바</label></li>
+                <li><label><input type="checkbox" value="레스토랑" checked={filters.services.includes("레스토랑")} onChange={handleServiceChange} />레스토랑</label></li>
+                <li><label><input type="checkbox" value="피트니스 센터" checked={filters.services.includes("피트니스 센터")} onChange={handleServiceChange} />피트니스 센터</label></li>
+                <li><label><input type="checkbox" value="수영장" checked={filters.services.includes("수영장")} onChange={handleServiceChange} />수영장</label></li>
+                <li><label><input type="checkbox" value="무료 주차" checked={filters.services.includes("무료 주차")} onChange={handleServiceChange} />무료 주차</label></li>
+                <li><label><input type="checkbox" value="세탁 시설" checked={filters.services.includes("세탁 시설")} onChange={handleServiceChange} />세탁 시설</label></li>
+                <li><label><input type="checkbox" value="공항 교통편" checked={filters.services.includes("공항 교통편")} onChange={handleServiceChange} />공항 교통편</label></li>
+                <li><label><input type="checkbox" value="전기차 충전소" checked={filters.services.includes("전기차 충전소")} onChange={handleServiceChange} />전기차 충전소</label></li>
+                <li><label><input type="checkbox" value="카지노" checked={filters.services.includes("카지노")} onChange={handleServiceChange} />카지노</label></li>
+                <li><label><input type="checkbox" value="반려동물 동반 가능" checked={filters.services.includes("반려동물 동반 가능")} onChange={handleServiceChange} />반려동물 동반 가능</label></li>
+                <li><label><input type="checkbox" value="매일 24시간 프런트데스크 운영" checked={filters.services.includes("매일 24시간 프런트데스크 운영")} onChange={handleServiceChange} />매일 24시간 프런트데스크 운영</label></li>
               </ul>
             </div>
             <div className={styles.divider}></div>
@@ -492,7 +527,7 @@ const ListPage = () => {
         </aside>
 
         {/* 호텔 카드 리스트 */}
-        <section className={styles.content}>
+        <section ref={listRef} className={styles.content}>
           <div className={styles.sortSection}>
             <select
               id="sort"

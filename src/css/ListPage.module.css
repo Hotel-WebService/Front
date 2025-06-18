@@ -256,17 +256,18 @@
     border: 2px solid #ccc;
     border-radius: 8px;
     overflow: hidden;
-    width: 60rem;
+    width: 105%;
 }
 
 .cardLink {
     text-decoration: none;
     color: #000000;
+    display: block;
 }
 
 .imageGroup {
     width: 400px;
-    height: 240px;
+    height: 255px;
 }
 
 .cardSlider {
