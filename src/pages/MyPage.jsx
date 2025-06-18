@@ -123,32 +123,37 @@ const MyPage = () => {
     }
   };
 
-  // 삭제 함수
-  const handleCancel = async (
-    paymentId,
+  const handleCancel = async ({
+    paymentID,
     roomID,
     checkInDate,
-    reservationID
-  ) => {
-    if (!reservationID) {
-      alert("예약 ID가 없습니다.");
+    reservationID,
+    imp_uid,
+  }) => {
+    if (!reservationID || !imp_uid) {
+      alert("예약 ID 또는 결제 정보가 없습니다.");
       return;
     }
-
     try {
-      const res = await fetch(
-        `http://localhost:8080/api/reservation/${reservationID}`,
-        {
-          method: "DELETE",
-        }
-      );
-      if (!res.ok) throw new Error("삭제 실패");
-      // UI 등 후처리
-      setPayments((prev) => prev.filter((p) => p.paymentID !== paymentId));
-
-      alert("예약이 취소되었습니다.");
+      const res = await fetch("http://localhost:8080/api/reservation/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          reservationID,
+          paymentID,
+          imp_uid, // ★ 반드시 포함
+        }),
+      });
+      const result = await res.json();
+      if (res.ok && result.status === "success") {
+        setPayments((prev) => prev.filter((p) => p.paymentID !== paymentID));
+        alert("예약과 결제가 모두 취소되었습니다.");
+      } else {
+        throw new Error(result.message || "취소 실패");
+      }
     } catch (err) {
-      alert("예약 취소 중 오류가 발생했습니다.");
+      alert("예약/결제 취소 중 오류가 발생했습니다.");
     }
   };
 
@@ -354,6 +359,7 @@ const MyPage = () => {
                       roomID: pay.roomID,
                       checkInDate: pay.check_in_date,
                       reservationID: pay.reservationID,
+                      imp_uid: pay.imp_uid,
                     });
                     setIsConfirmModalOpen(true);
                   }}
@@ -490,25 +496,18 @@ const MyPage = () => {
 
         <div className="footer-bottom">
           <div className="social-wrapper">
-            <div
-              className="social-icon"
-              style={{ backgroundImage: `url(${facebook})` }}
-            ></div>
-            <div
-              className="social-icon"
-              style={{ backgroundImage: `url(${instargram})` }}
-            ></div>
-            <div
-              className="social-icon"
-              style={{ backgroundImage: `url(${twitter})` }}
-            ></div>
+            <div className="social-icon" style={{ backgroundImage: `url(${facebook})` }}></div>
+            <a href="https://www.instagram.com/stay_manager" target="_blank" rel="noopener noreferrer">
+              <div className="social-icon" style={{ backgroundImage: `url(${instargram})` }}></div>
+            </a>
+            <div className="social-icon" style={{ backgroundImage: `url(${twitter})` }}></div>
           </div>
           <p>© 2025 Stay Manager. All rights reserved.</p>
         </div>
       </footer>
       {/* Footer */}
 
-      <Modal
+      < Modal
         isOpen={isShareModalOpen}
         onRequestClose={closeShareModal}
         contentLabel="공유 모달"
@@ -516,25 +515,27 @@ const MyPage = () => {
         overlayClassName={styles.overlay}
       >
         <h2>공유하기</h2>
-        {previewImage && (
-          <div className={styles.previewBox}>
-            <p style={{ fontSize: "0.9rem", marginBottom: "0.5rem" }}>
-              캡처 미리보기
-            </p>
-            <img
-              src={previewImage}
-              alt="예약정보 미리보기"
-              className={styles.previewImage}
-            />
-          </div>
-        )}
+        {
+          previewImage && (
+            <div className={styles.previewBox}>
+              <p style={{ fontSize: "0.9rem", marginBottom: "0.5rem" }}>
+                캡처 미리보기
+              </p>
+              <img
+                src={previewImage}
+                alt="예약정보 미리보기"
+                className={styles.previewImage}
+              />
+            </div>
+          )
+        }
         <button onClick={handleCaptureAndCopy} className={styles.copyBtn}>
           예약정보 캡처해서 복사
         </button>
         <button onClick={closeShareModal} className={styles.closeBtn}>
           닫기
         </button>
-      </Modal>
+      </Modal >
 
       <Modal
         isOpen={isPaymentDetailModalOpen}
@@ -607,12 +608,7 @@ const MyPage = () => {
           <button
             className={styles.confirmBtn}
             onClick={() => {
-              handleCancel(
-                cancelTarget.paymentID,
-                cancelTarget.roomID,
-                cancelTarget.checkInDate,
-                cancelTarget.reservationID
-              );
+              handleCancel(cancelTarget);
               setIsConfirmModalOpen(false);
             }}
           >
@@ -626,7 +622,7 @@ const MyPage = () => {
           </button>
         </div>
       </Modal>
-    </div>
+    </div >
   );
 };
 

@@ -323,22 +323,22 @@ const FirstPage = () => {
 
       {/* 추천 여행지 */}
       <section className={styles.recommend}>
-        <h3>추천 여행지</h3>
+        <h3>추천 관광지</h3>
         <div className={styles.destinations}>
           <div className={styles.destItem}>
             <div className={styles.destImg1} style={{ backgroundImage: `url(${r1})` }}></div>
-            <h4>전주 한옥마을</h4>
-            <p>한옥마을</p>
+            <h4>남산 서울타워</h4>
+            <p>용산구</p>
           </div>
           <div className={styles.destItem}>
             <div className={styles.destImg2} style={{ backgroundImage: `url(${r2})` }}></div>
-            <h4>제주도</h4>
-            <p>성산일출봉</p>
+            <h4>한옥마을</h4>
+            <p>북촌</p>
           </div>
           <div className={styles.destItem}>
             <div className={styles.destImg3} style={{ backgroundImage: `url(${r3})` }}></div>
-            <h4>강릉</h4>
-            <p>경포해변</p>
+            <h4>덕수궁</h4>
+            <p>중구</p>
           </div>
         </div>
       </section>
@@ -372,7 +372,9 @@ const FirstPage = () => {
         <div className="footer-bottom">
           <div className="social-wrapper">
             <div className="social-icon" style={{ backgroundImage: `url(${facebook})` }}></div>
-            <div className="social-icon" style={{ backgroundImage: `url(${instargram})` }}></div>
+            <a href="https://www.instagram.com/stay_manager" target="_blank" rel="noopener noreferrer">
+              <div className="social-icon" style={{ backgroundImage: `url(${instargram})` }}></div>
+            </a>
             <div className="social-icon" style={{ backgroundImage: `url(${twitter})` }}></div>
           </div>
           <p>© 2025 Stay Manager. All rights reserved.</p>

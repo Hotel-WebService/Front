@@ -11,8 +11,8 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import { setUserInfo } from "../features/userSlice";
 import { useNavigate } from "react-router-dom";
-import Holidays from "date-holidays"; 
-import { setLikedHotels } from "../features/likedHotelsSlice"; 
+import Holidays from "date-holidays";
+import { setLikedHotels } from "../features/likedHotelsSlice";
 // 이미지
 import instargram from "../assets/icon/instargram.jpg";
 import facebook from "../assets/icon/facebook.jpg";
@@ -104,6 +104,11 @@ const ReservationPage = () => {
     const [newScore, setNewScore] = useState(10); // 기본값 10점
 
     const hd = new Holidays("KR");
+
+    // 페이지 들어갈 때 맨 위 페이지로 이동
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
     // 날짜 변경할 때 마다 방 이용여부 확인
     useEffect(() => {
@@ -236,6 +241,12 @@ const ReservationPage = () => {
             return;
         }
 
+        // 해당 예약날에 리뷰 작성했을 시 리뷰 추가 작성 금지
+        if (myWrittenReservationIDs.includes(Number(selectedReservationID))) {
+            alert("이 예약건에는 이미 리뷰를 작성하셨습니다.");
+            return;
+        }
+
         const selectedReservation = myReservations.find(
             (r) => r.reservationID === Number(selectedReservationID)
         );
@@ -297,6 +308,11 @@ const ReservationPage = () => {
             return require("../assets/no-image.jpg");
         }
     };
+
+    // 이미 작성한 reservationID 목록
+    const myWrittenReservationIDs = reviews
+        .filter((r) => r.userID === user.userID)
+        .map((r) => r.reservationID);
 
     const rooms = rrooms.map((room) => ({
         id: room.roomID,
@@ -457,7 +473,7 @@ const ReservationPage = () => {
                             alert("결제 성공 및 검증 완료");
                             // data로 추가 처리 가능
 
-                            handleReservationAndPayment();
+                            handleReservationAndPayment(rsp.imp_uid);
                             closeBookingModal();
                         })
                         .catch(() => {
@@ -470,7 +486,7 @@ const ReservationPage = () => {
         );
     };
 
-    const handleReservationAndPayment = async () => {
+    const handleReservationAndPayment = async (impUid) => {
         console.log("user 객체 구조:", user);
 
         // 1. 예약 데이터
@@ -490,6 +506,7 @@ const ReservationPage = () => {
             payment_method: selectedPG,
             payment_status: "Y",
             // pay_date는 백엔드에서 자동
+            impUid: impUid,
         };
 
         // 3. 콘솔에 데이터 확인
@@ -810,6 +827,10 @@ const ReservationPage = () => {
                         <span className={styles.ratingBadge}>★ {averageScore}</span>
                         <span className={styles.reviewCount}>리뷰 {reviews.length}개</span>
                     </div>
+                    {/* 호텔 설명 추가 */}
+                    {hotel?.description && (
+                        <div className={styles.hotelDescription}>{hotel.description}</div>
+                    )}
                 </div>
                 <div>
                     <h3>지도 위치</h3>
@@ -997,17 +1018,20 @@ const ReservationPage = () => {
                         className={styles.reservationID}
                     >
                         <option value="">예약 선택</option>
-                        {myReservations.map((res) => (
-                            <option key={res.reservationID} value={res.reservationID}>
-                                #{res.reservationID} - {res.check_in_date} ~{" "}
-                                {res.check_out_date}
-                            </option>
-                        ))}
+                        {/* 예약 상태 Y의 값만 리뷰 가능 */}
+                        {myReservations
+                            .filter((res) => res.status === "Y")
+                            .map((res) => (
+                                <option key={res.reservationID} value={res.reservationID}>
+                                    #{res.reservationID} - {res.check_in_date} ~{" "}
+                                    {res.check_out_date}
+                                </option>
+                            ))}
                     </select>
                 </div>
                 <textarea
                     className={styles.reviewInput}
-                    placeholder="리뷰를 작성하세요"
+                    placeholder="리뷰를 작성하세요. 리뷰 글은 1건만 등록 가능합니다."
                     value={newReview}
                     onChange={(e) => setNewReview(e.target.value)}
                 />
@@ -1066,18 +1090,11 @@ const ReservationPage = () => {
 
                 <div className="footer-bottom">
                     <div className="social-wrapper">
-                        <div
-                            className="social-icon"
-                            style={{ backgroundImage: `url(${facebook})` }}
-                        ></div>
-                        <div
-                            className="social-icon"
-                            style={{ backgroundImage: `url(${instargram})` }}
-                        ></div>
-                        <div
-                            className="social-icon"
-                            style={{ backgroundImage: `url(${twitter})` }}
-                        ></div>
+                        <div className="social-icon" style={{ backgroundImage: `url(${facebook})` }}></div>
+                        <a href="https://www.instagram.com/stay_manager" target="_blank" rel="noopener noreferrer">
+                            <div className="social-icon" style={{ backgroundImage: `url(${instargram})` }}></div>
+                        </a>
+                        <div className="social-icon" style={{ backgroundImage: `url(${twitter})` }}></div>
                     </div>
                     <p>© 2025 Stay Manager. All rights reserved.</p>
                 </div>

@@ -10,11 +10,13 @@ import ListPage from './pages/ListPage';
 import ReservationPage from './pages/ReservationPage';
 import SignupPage from './pages/SignupPage';
 import HotelList from './pages/HotelList';
+import ScrollToTop from "./pages/ScrollToTop";
 
 function App() {
   return (
     <Provider store={store}>
       <BrowserRouter> {/* ✅ Router로 감싸줌 */}
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<FirstPage />} />
           <Route path="/ai" element={<AiPage />} />

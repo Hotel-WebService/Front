@@ -352,7 +352,9 @@ const SignupPage = () => {
                 <div className="footer-bottom">
                     <div className="social-wrapper">
                         <div className="social-icon" style={{ backgroundImage: `url(${facebook})` }}></div>
-                        <div className="social-icon" style={{ backgroundImage: `url(${instargram})` }}></div>
+                        <a href="https://www.instagram.com/stay_manager" target="_blank" rel="noopener noreferrer">
+                            <div className="social-icon" style={{ backgroundImage: `url(${instargram})` }}></div>
+                        </a>
                         <div className="social-icon" style={{ backgroundImage: `url(${twitter})` }}></div>
                     </div>
                     <p>© 2025 Stay Manager. All rights reserved.</p>

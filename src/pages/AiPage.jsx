@@ -28,37 +28,37 @@ const animation = `${gradient} 10s ease infinite`;
 const dbQuestions = [
   {
     field: "district",
-    question: "어느 지역(구/시)의 호텔을 찾으세요?",
+    question: "Q. 어느 지역(구/시)의 호텔을 찾으세요?",
     type: "district",
     options: [],
   },
   {
     field: "star",
-    question: "호텔의 등급(성급)을 선택해 주세요.",
+    question: "Q. 호텔의 등급(성급)을 선택해 주세요.",
     type: "choice",
     options: ["2성급", "3성급", "4성급", "5성급"],
   },
   {
     field: "parking_lot",
-    question: "주차장이 반드시 필요한가요?",
+    question: "Q. 주차장이 반드시 필요한가요?",
     type: "choice",
     options: ["필수", "상관없음"],
   },
   {
     field: "capacity",
-    question: "몇 명이서 숙박하시나요?",
+    question: "Q. 몇 명이서 숙박하시나요?",
     type: "choice",
     options: ["1명", "2명", "3명", "4명", "5명 이상"],
   },
   {
     field: "price",
-    question: "1박당 객실 가격대는 얼마가 적당한가요?",
+    question: "Q. 1박당 객실 가격대는 얼마가 적당한가요?",
     type: "choice",
     options: ["10만원 미만", "10~20만원", "20~40만원", "40만원 이상"],
   },
   {
     field: "check_in",
-    question: "체크인 시간대에 제한이 있으신가요?",
+    question: "Q. 체크인 시간대에 제한이 있으신가요?",
     type: "choice",
     options: ["상관없음", "오후 3시 이후", "오후 6시 이후"],
   },
@@ -68,7 +68,7 @@ const dbQuestions = [
 const aiQuestions = [
   {
     field: "theme",
-    question: "호텔을 고를 때 가장 중요한 테마를 골라주세요",
+    question: "Q. 호텔을 고를 때 가장 중요한 테마를 골라주세요",
     options: [
       "가족여행에 적합",
       "조용한 곳",
@@ -80,7 +80,7 @@ const aiQuestions = [
   },
   {
     field: "mood",
-    question: "선호하는 호텔의 분위기는 어떤가요?",
+    question: "Q. 선호하는 호텔의 분위기는 어떤가요?",
     options: [
       "모던/세련됨",
       "전통/고풍스러움",
@@ -90,7 +90,7 @@ const aiQuestions = [
   },
   {
     field: "special",
-    question: "특별히 원하는 경험이나 서비스가 있으신가요?",
+    question: "Q. 특별히 원하는 경험이나 서비스가 있으신가요?",
     options: [
       "조용한 독립 공간",
       "아이 동반 친화 시설",
@@ -113,7 +113,7 @@ const AiPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false); // 백엔드 모달 오픈
   const navigate = useNavigate(); // 백엔드 뒤로가기
   const [recommendReason, setRecommendReason] = useState(""); // 추천 이유
-
+  const [recommendResultMessage, setRecommendResultMessage] = useState(""); // 백엔드 추천 문구 추가
   const boxHover = useColorModeValue("gray.100", "gray.700");
   const boxStyle = {
     p: 6,
@@ -165,7 +165,6 @@ const AiPage = () => {
     setDbAnswers((prev) => ({ ...prev, district }));
     setStep((prev) => prev + 1);
   };
-
 
   const handleRecommend = async () => {
     if (!userId) {
@@ -251,6 +250,7 @@ const AiPage = () => {
       const requestBody = {
         hotelCandidates: filteredHotels,
         ...aiAnswers,
+        district: dbAnswers.district,
       };
       console.log("🟠 AI 추천 요청 데이터 (ChatGPT에 전달):", requestBody);
       const aiRes = await fetch(
@@ -266,7 +266,15 @@ const AiPage = () => {
       const result = await aiRes.json();
       console.log("🔵 AI 추천 결과:", result);
 
-      setRecommendResult(result.recommendedHotels); // 1. 추천 결과 세팅
+      let hotels = [];
+      if (Array.isArray(result.recommendedHotels)) {
+        hotels = result.recommendedHotels;
+      } else if (result.bestHotel) {
+        hotels = [result.bestHotel];
+      }
+
+      setRecommendResult(hotels); // 1. 추천 결과 세팅
+      setRecommendResultMessage(result.message || ""); // 메시지 저장
       setRecommendReason(generateShortReason());
       setIsModalOpen(true); // 2. 모달창 오픈(팝업)
     } catch (e) {
@@ -351,7 +359,9 @@ const AiPage = () => {
     if (mood) line2Parts.push(`‘${mood}’ 분위기의`);
 
     const line2 = line2Parts.join(" ");
-    const line3 = special ? `‘${special}’을(를) 갖춘 위의 호텔들을 추천드립니다.` : `선택 기준에 맞춰 추천했습니다.`;
+    const line3 = special
+      ? `‘${special}’을(를) 갖춘 위의 호텔들을 추천드립니다.`
+      : `선택 기준에 맞춰 추천했습니다.`;
 
     return [line1, line2, line3].filter(Boolean).join("\n");
   };
@@ -510,66 +520,93 @@ const AiPage = () => {
               justifyContent="center"
               textAlign="center"
             >
-
               <Text fontSize="xl" color="teal.500" fontWeight="bold" mt="12">
                 ✅ 모든 질문 완료! <br />
                 추천을 생성할 수 있습니다.
               </Text>
               {/* 🔽 추천 결과 표시 영역 */}
 
-              <Box mt={10} mx="auto" maxW="lg" bg="gray.100" p="7" border="1px solid" borderColor="gray.300">
-                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} fontSize="md" color="gray.700">
+              <Box
+                mt={10}
+                mx="auto"
+                maxW="lg"
+                bg="gray.100"
+                p="7"
+                border="1px solid"
+                borderColor="gray.300"
+              >
+                <SimpleGrid
+                  columns={{ base: 1, md: 2 }}
+                  spacing={4}
+                  fontSize="md"
+                  color="gray.700"
+                >
                   {dbAnswers.district && (
                     <Box display="flex">
-                      <Box w="80px" fontWeight="bold">지역</Box>
+                      <Box w="80px" fontWeight="bold">
+                        지역
+                      </Box>
                       <Text>: {dbAnswers.district}</Text>
                     </Box>
                   )}
                   {dbAnswers.star && (
                     <Box display="flex">
-                      <Box w="80px" fontWeight="bold">등급</Box>
+                      <Box w="80px" fontWeight="bold">
+                        등급
+                      </Box>
                       <Text>: {dbAnswers.star}</Text>
                     </Box>
                   )}
                   {dbAnswers.parking_lot && (
                     <Box display="flex">
-                      <Box w="80px" fontWeight="bold">주차</Box>
+                      <Box w="80px" fontWeight="bold">
+                        주차
+                      </Box>
                       <Text>: {dbAnswers.parking_lot}</Text>
                     </Box>
                   )}
                   {dbAnswers.capacity && (
                     <Box display="flex">
-                      <Box w="80px" fontWeight="bold">인원</Box>
+                      <Box w="80px" fontWeight="bold">
+                        인원
+                      </Box>
                       <Text>: {dbAnswers.capacity}</Text>
                     </Box>
                   )}
                   {dbAnswers.price && (
                     <Box display="flex">
-                      <Box w="80px" fontWeight="bold">가격대</Box>
+                      <Box w="80px" fontWeight="bold">
+                        가격대
+                      </Box>
                       <Text>: {dbAnswers.price}</Text>
                     </Box>
                   )}
                   {aiAnswers.theme && (
                     <Box display="flex">
-                      <Box w="80px" fontWeight="bold">테마</Box>
+                      <Box w="80px" fontWeight="bold">
+                        테마
+                      </Box>
                       <Text>: {aiAnswers.theme}</Text>
                     </Box>
                   )}
                   {aiAnswers.mood && (
                     <Box display="flex">
-                      <Box w="80px" fontWeight="bold">분위기</Box>
+                      <Box w="80px" fontWeight="bold">
+                        분위기
+                      </Box>
                       <Text>: {aiAnswers.mood}</Text>
                     </Box>
                   )}
                   {aiAnswers.special && (
                     <Box display="flex">
-                      <Box w="80px" fontWeight="bold">특별요구</Box>
+                      <Box w="80px" fontWeight="bold">
+                        특별요구
+                      </Box>
                       <Text>: {aiAnswers.special}</Text>
                     </Box>
                   )}
                 </SimpleGrid>
               </Box>
-
 
               <Button
                 colorScheme="teal"
@@ -588,6 +625,7 @@ const AiPage = () => {
                 onClose={() => setIsModalOpen(false)}
                 hotels={Array.isArray(recommendResult) ? recommendResult : []}
                 recommendReason={recommendReason}
+                recommendMessage={recommendResultMessage}
               />
               {/* <Button
                 colorScheme="gray"

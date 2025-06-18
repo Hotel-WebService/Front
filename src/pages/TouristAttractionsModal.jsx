@@ -1,7 +1,20 @@
 import React, { useState, useEffect } from "react";
 import {
-  Box, Text, Button, Image, HStack, VStack, Modal, ModalOverlay, ModalContent,
-  ModalHeader, ModalCloseButton, ModalBody, ModalFooter, Spinner, SimpleGrid,
+  Box,
+  Text,
+  Button,
+  Image,
+  HStack,
+  VStack,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  Spinner,
+  SimpleGrid,
   Link as ChakraLink,
 } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
@@ -10,7 +23,8 @@ import { FaMapMarkedAlt } from "react-icons/fa";
 
 import noImage from "../assets/no-image.jpg";
 
-const SERVICE_KEY = "tNZyFcQn0PxOiEuepPMyTQwurwmAfGzGUL%2FM62kbm3VjkpUdXuquV592epp37ojX%2FATfb8HNMvn6N3jWNM4mQQ%3D%3D";
+const SERVICE_KEY =
+  "tNZyFcQn0PxOiEuepPMyTQwurwmAfGzGUL%2FM62kbm3VjkpUdXuquV592epp37ojX%2FATfb8HNMvn6N3jWNM4mQQ%3D%3D";
 
 const touristCategories = [
   { id: 12, label: "관광지" },
@@ -22,7 +36,12 @@ const touristCategories = [
   { id: 39, label: "음식점" },
 ];
 
-const fetchTourApiByCategory = async (lat, lng, radius = 2000, contentTypeId = 12) => {
+const fetchTourApiByCategory = async (
+  lat,
+  lng,
+  radius = 2000,
+  contentTypeId = 12
+) => {
   const url = `https://apis.data.go.kr/B551011/KorService2/locationBasedList2?serviceKey=${SERVICE_KEY}&numOfRows=10&pageNo=1&MobileOS=ETC&MobileApp=TourApp&mapX=${lng}&mapY=${lat}&radius=${radius}&contentTypeId=${contentTypeId}&_type=json`;
   const response = await fetch(url);
   const data = await response.json();
@@ -30,9 +49,10 @@ const fetchTourApiByCategory = async (lat, lng, radius = 2000, contentTypeId = 1
 
   return items.map((item) => ({
     ...item,
-    distance: item.mapy && item.mapx
-      ? haversineDistance(lat, lng, item.mapy, item.mapx)
-      : null,
+    distance:
+      item.mapy && item.mapx
+        ? haversineDistance(lat, lng, item.mapy, item.mapx)
+        : null,
   }));
 };
 
@@ -51,7 +71,7 @@ const getHotelImageList = (hotelId, count = 5) => {
 
 const haversineDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371; // km
-  const toRad = deg => deg * (Math.PI / 180);
+  const toRad = (deg) => deg * (Math.PI / 180);
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
   const a =
@@ -60,7 +80,13 @@ const haversineDistance = (lat1, lon1, lat2, lon2) => {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
 
-export default function TouristAttractionsModal({ isOpen, onClose, hotels = [], recommendReason }) {
+export default function TouristAttractionsModal({
+  isOpen,
+  onClose,
+  hotels = [],
+  recommendReason,
+  recommendMessage,
+}) {
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [mainImgIdx, setMainImgIdx] = useState(0);
   const [showTour, setShowTour] = useState(false);
@@ -74,7 +100,12 @@ export default function TouristAttractionsModal({ isOpen, onClose, hotels = [], 
   useEffect(() => {
     if (showTour && selectedHotel) {
       setLoadingTour(true);
-      fetchTourApiByCategory(selectedHotel.latitude, selectedHotel.longitude, 2000, selectedCategoryId)
+      fetchTourApiByCategory(
+        selectedHotel.latitude,
+        selectedHotel.longitude,
+        2000,
+        selectedCategoryId
+      )
         .then(setTouristSpots)
         .finally(() => setLoadingTour(false));
     }
@@ -88,8 +119,14 @@ export default function TouristAttractionsModal({ isOpen, onClose, hotels = [], 
           <ModalHeader>추천 결과 없음</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Box p={6} textAlign="center" color="red.500" fontWeight="bold" fontSize="xl">
-              추천 결과가 없습니다.
+            <Box
+              p={6}
+              textAlign="center"
+              color="red.500"
+              fontWeight="bold"
+              fontSize="xl"
+            >
+              {recommendMessage || "추천 결과가 없습니다."}
             </Box>
           </ModalBody>
         </ModalContent>
@@ -104,10 +141,27 @@ export default function TouristAttractionsModal({ isOpen, onClose, hotels = [], 
         <ModalHeader>
           {showTour
             ? `${selectedHotel.hotelName} 주변 관광지`
-            : `추천 호텔 ${hotels.length > 1 ? `(${selectedIdx + 1}/${hotels.length})` : ""} : ${selectedHotel.hotelName}`}
+            : `추천 호텔 ${hotels.length > 1 ? `(${selectedIdx + 1}/${hotels.length})` : ""
+            } : ${selectedHotel.hotelName}`}
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody overflowY="auto" maxH="70vh" pr={1}>
+          {/* 안내 메시지 박스 추가 */}
+          {!showTour && recommendMessage && (
+            <Box
+              mb={4}
+              p={3}
+              borderRadius="md"
+              bg="yellow.50"
+              color="yellow.800"
+              fontWeight="semibold"
+              fontSize="lg"
+              textAlign="center"
+              border="1px solid #f6e05e"
+            >
+              {recommendMessage}
+            </Box>
+          )}
           {showTour ? (
             <>
               <HStack spacing={2} wrap="wrap" justify="center" mb={4}>
@@ -115,7 +169,9 @@ export default function TouristAttractionsModal({ isOpen, onClose, hotels = [], 
                   <Button
                     key={cat.id}
                     size="sm"
-                    variant={selectedCategoryId === cat.id ? "solid" : "outline"}
+                    variant={
+                      selectedCategoryId === cat.id ? "solid" : "outline"
+                    }
                     colorScheme="teal"
                     onClick={() => setSelectedCategoryId(cat.id)}
                   >
@@ -124,19 +180,31 @@ export default function TouristAttractionsModal({ isOpen, onClose, hotels = [], 
                 ))}
               </HStack>
               {loadingTour ? (
-                <Box textAlign="center" py={10}><Spinner size="lg" color="teal.500" /></Box>
+                <Box textAlign="center" py={10}>
+                  <Spinner size="lg" color="teal.500" />
+                </Box>
               ) : (
                 <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                   {touristSpots.length === 0 ? (
                     <Text>근처 관광지를 찾을 수 없습니다.</Text>
                   ) : (
                     touristSpots.map((spot) => (
-                      <Box key={spot.contentid} borderWidth="1px" borderRadius="lg" p={3}>
+                      <Box
+                        key={spot.contentid}
+                        borderWidth="1px"
+                        borderRadius="lg"
+                        p={3}
+                      >
                         <Text fontWeight="bold">{spot.title}</Text>
-                        {spot.addr1 && <Text fontSize="sm" color="gray.600">{spot.addr1}</Text>}
+                        {spot.addr1 && (
+                          <Text fontSize="sm" color="gray.600">
+                            {spot.addr1}
+                          </Text>
+                        )}
                         {spot.distance !== null && isFinite(spot.distance) && (
                           <Text fontSize="xs" color="gray.500">
-                            "{selectedHotel.hotelName}"에서 관광지까지의 거리: {spot.distance < 1
+                            "{selectedHotel.hotelName}"에서 관광지까지의 거리:{" "}
+                            {spot.distance < 1
                               ? `${Math.round(spot.distance * 1000)} m`
                               : `${spot.distance.toFixed(2)} km`}
                           </Text>
@@ -153,7 +221,9 @@ export default function TouristAttractionsModal({ isOpen, onClose, hotels = [], 
                         />
 
                         <ChakraLink
-                          href={`https://map.naver.com/v5/search/${encodeURIComponent(spot.title)}`}
+                          href={`https://map.naver.com/v5/search/${encodeURIComponent(
+                            spot.title
+                          )}`}
                           isExternal
                           color="green.600"
                           display="flex"
@@ -164,7 +234,9 @@ export default function TouristAttractionsModal({ isOpen, onClose, hotels = [], 
                         </ChakraLink>
 
                         <ChakraLink
-                          href={`https://map.kakao.com/?q=${encodeURIComponent(spot.title)}`}
+                          href={`https://map.kakao.com/?q=${encodeURIComponent(
+                            spot.title
+                          )}`}
                           isExternal
                           color="blue.600"
                           display="flex"
@@ -198,7 +270,9 @@ export default function TouristAttractionsModal({ isOpen, onClose, hotels = [], 
                     w="60px"
                     h="40px"
                     borderRadius="md"
-                    border={mainImgIdx === idx ? "2px solid teal" : "1px solid #ccc"}
+                    border={
+                      mainImgIdx === idx ? "2px solid teal" : "1px solid #ccc"
+                    }
                     cursor="pointer"
                     onClick={() => setMainImgIdx(idx)}
                   />
@@ -206,13 +280,21 @@ export default function TouristAttractionsModal({ isOpen, onClose, hotels = [], 
               </HStack>
               <VStack align="start" spacing={2}>
                 <Box mt={2} p={2} bg="gray.50" borderRadius="md">
-                  <Text fontSize="sm" color="gray.600" whiteSpace="pre-line"><b>주소:</b> {selectedHotel.address}</Text>
-                  <Text fontSize="sm" color="gray.600" whiteSpace="pre-line"><b>설명:</b> {selectedHotel.description}</Text>
+                  <Text fontSize="sm" color="gray.600" whiteSpace="pre-line">
+                    <b>주소:</b> {selectedHotel.address}
+                  </Text>
+                  <Text fontSize="sm" color="gray.600" whiteSpace="pre-line">
+                    <b>설명:</b> {selectedHotel.description}
+                  </Text>
                 </Box>
                 {recommendReason && (
                   <Box mt={2} p={2} bg="gray.50" borderRadius="md">
-                    <Text fontWeight="semibold" color="teal.600">AI 추천 이유</Text>
-                    <Text fontSize="sm" color="gray.600" whiteSpace="pre-line">{recommendReason}</Text>
+                    <Text fontWeight="semibold" color="teal.600">
+                      AI 추천 이유
+                    </Text>
+                    <Text fontSize="sm" color="gray.600" whiteSpace="pre-line">
+                      {recommendReason}
+                    </Text>
                   </Box>
                 )}
               </VStack>
@@ -221,15 +303,25 @@ export default function TouristAttractionsModal({ isOpen, onClose, hotels = [], 
         </ModalBody>
         <ModalFooter flexDirection="column" alignItems="stretch" gap={2}>
           {showTour ? (
-            <Button onClick={() => setShowTour(false)} colorScheme="gray" width="100%">
+            <Button
+              onClick={() => setShowTour(false)}
+              colorScheme="gray"
+              width="100%"
+            >
               ← 호텔 정보로 돌아가기
             </Button>
           ) : (
             <>
               <Link to={`/reservationPage/${selectedHotel.hotelID}`}>
-                <Button colorScheme="teal" width="100%">이 호텔 예약하러 가기</Button>
+                <Button colorScheme="teal" width="100%">
+                  이 호텔 예약하러 가기
+                </Button>
               </Link>
-              <Button onClick={() => setShowTour(true)} colorScheme="blue" width="100%">
+              <Button
+                onClick={() => setShowTour(true)}
+                colorScheme="blue"
+                width="100%"
+              >
                 주변 관광지 확인하기
               </Button>
               {hotels.length > 1 && (
@@ -237,14 +329,20 @@ export default function TouristAttractionsModal({ isOpen, onClose, hotels = [], 
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => setSelectedIdx((selectedIdx - 1 + hotels.length) % hotels.length)}
+                    onClick={() =>
+                      setSelectedIdx(
+                        (selectedIdx - 1 + hotels.length) % hotels.length
+                      )
+                    }
                   >
                     ← 이전 호텔
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => setSelectedIdx((selectedIdx + 1) % hotels.length)}
+                    onClick={() =>
+                      setSelectedIdx((selectedIdx + 1) % hotels.length)
+                    }
                   >
                     다음 호텔 →
                   </Button>
