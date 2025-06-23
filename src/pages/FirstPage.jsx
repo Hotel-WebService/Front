@@ -16,6 +16,15 @@ import { setCheckin, setCheckout, setGuests } from '../features/reservationSlice
 import { Button, useToast } from '@chakra-ui/react';
 import FooterModal from "../pages/FooterModal";
 import { useDisclosure } from "@chakra-ui/react";
+import {
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+  InputGroup,
+  InputRightElement,
+} from "@chakra-ui/react";
 
 // 이미지
 import heroImage from '../assets/firstPage/firstPage.jpg';
@@ -34,6 +43,7 @@ import facebook from '../assets/icon/facebook.jpg';
 import twitter from '../assets/icon/twitter.jpg';
 
 const FirstPage = () => {
+  const [guestsRaw, setGuestsRaw] = useState('');
   const search = useSelector(state => state.search);
   const dispatch = useDispatch();
   const { isAuthenticated, username } = useSelector((state) => state.user);
@@ -43,6 +53,11 @@ const FirstPage = () => {
   const mapRef = useRef(null);
   const navigate = useNavigate(); // 백엔드 추가
   const [hotel, setHotel] = useState(null); // 백엔드 호텔 정보 추가
+
+  const [hotelsinfo, setHotelsinfo] = useState([]);
+  const [room, setRoom] = useState([]);
+  const [allReviews, setAllReviews] = useState([]);
+  const [recommendHotels, setRecommendHotels] = useState([]);
 
   // 백엔드 로그인, 로그아웃 추가
   useEffect(() => {
@@ -125,169 +140,408 @@ const FirstPage = () => {
     onOpen();
   };
 
+  // 1) 호텔 정보
+  useEffect(() => {
+    fetch("http://localhost:8080/api/hotels", { credentials: "include" })
+      .then((res) => res.json())
+      .then(setHotelsinfo)
+      .catch(console.error);
+  }, []);
+
+  // 2) 방 정보
+  useEffect(() => {
+    fetch("http://localhost:8080/api/rooms", { credentials: "include" })
+      .then((res) => res.json())
+      .then(setRoom)
+      .catch(console.error);
+  }, []);
+
+  // 3) 리뷰 정보
+  useEffect(() => {
+    fetch("http://localhost:8080/api/reviews", { credentials: "include" })
+      .then((res) => res.json())
+      .then(setAllReviews)
+      .catch(console.error);
+  }, []);
+
+  // 4) 추천 호텔 계산: 평점 기준 내림차순 Top 3
+  useEffect(() => {
+    if (hotelsinfo.length === 0) return;
+    const mappedHotels = hotelsinfo.map((hotel) => {
+      const hotelReviews = allReviews.filter(
+        (r) => r.hotelID === hotel.hotelID
+      );
+      const averageRating = hotelReviews.length
+        ? (
+          hotelReviews.reduce((sum, r) => sum + r.rating, 0) /
+          hotelReviews.length
+        ).toFixed(1)
+        : "0.0";
+
+      return {
+        hotelID: hotel.hotelID,
+        hotelName: hotel.hotelName,
+        address: hotel.address,
+        averageRating,
+        reviewCount: hotelReviews.length,
+      };
+    });
+
+    // 평점순 내림차순 Top 5만 추려서 세팅
+    const topHotels = [...mappedHotels]
+      .sort((a, b) => parseFloat(b.averageRating) - parseFloat(a.averageRating))
+      .slice(0, 5);
+
+    setRecommendHotels(topHotels);
+  }, [hotelsinfo, allReviews]);
+
+  // 호텔 이미지 자동 매핑 함수
+  const getHotelImageList = (hotelId, count = 5) => {
+    const images = [];
+    for (let i = 1; i <= count; i++) {
+      try {
+        // jpg 또는 png로도 가능
+        const img = require(`../assets/hotel${hotelId}/hotel${i}.jpg`);
+        images.push(img);
+      } catch (e) {
+        images.push("https://placehold.co/400x300?text=No+Image");
+      }
+    }
+    return images;
+  };
+
   return (
     <div>
       {/* Booking Form */}
       <section className={styles.hero}>
-        <div className={styles.heroImage}
-          style={{ backgroundImage: `url(${heroImage})` }}>
+        <div
+          className={styles.heroImage}
+          style={{ backgroundImage: `url(${heroImage})` }}
+        >
           <header className={styles.header}>
-            <div className={styles.logo}>
-              <a href="/">Stay Manager</a>
-            </div>
+            <div className={styles.logo}><a href="/">Stay Manager</a></div>
             <div className={styles.userLinks}>
-              {isAuthenticated
-                ? (
-                  <>
-                    <span>안녕하세요, {username}님        </span>
-                    <Link to="/myPage">MyPage</Link>
-                    <Link to="/savedPage">찜 목록</Link>
-                    <Link to="/"
-                      onClick={handleLogout}
-                      className={styles.logoutLink}
-                    >로그아웃</Link>
-                  </>
-                )
-                : (
-                  <>
-                    <Link to="/signupPage">회원가입</Link>
-                    <Link to="/login">로그인</Link>
-                  </>
-                )
-              }
+              {isAuthenticated ? (
+                <>
+                  <span>안녕하세요, {username}님</span>
+                  <Link to="/myPage">MyPage</Link>
+                  <Link to="/savedPage">찜 목록</Link>
+                  <Link to="/" onClick={handleLogout} className={styles.logoutLink}>로그아웃</Link>
+                </>
+              ) : (
+                <>
+                  <Link to="/signupPage">회원가입</Link>
+                  <Link to="/login">로그인</Link>
+                </>
+              )}
             </div>
           </header>
-        </div>
-        <div className={styles.bookingForm}>
-          <h2>원하는 숙소를 예약하세요</h2>
 
-          <div>
-            <label htmlFor="location">목적지</label>
-            <input
-              type="text"
-              id="destination"
-              value={destination}
-              onChange={(e) => dispatch(setDestination(e.target.value))}
-            />
-          </div>
+          <h2 className={styles.heroTitle}>어디로 떠나고 싶으신가요?</h2>
 
-          <div className={styles.sb}>
-            <div>
-              <label>체크인</label>
-              <DatePicker
-                selected={checkin}
-                onChange={(date) => dispatch(setCheckin(date))}
-                placeholderText="날짜 선택"
-                dateFormat="yyyy/MM/dd"
-                popperPlacement="bottom-start"
-                showPopperArrow={false}
-                locale={ko}
-                minDate={new Date()}
-                dayClassName={(date) => {
-                  if (!isFuture(date)) return '';
-                  if (isHoliday(date)) return 'holiday';
-                  if (isWeekend(date)) return 'weekend';
-                  return undefined;
-                }}
-              />
+          <div className={styles.bookingForm}>
+            <div className={styles.formBox}>
+              {/* 목적지 */}
+              <div className={styles.formItem}>
+                <i className="fa-solid fa-magnifying-glass"></i>
+                <input
+                  type="text"
+                  value={destination}
+                  onChange={(e) => dispatch(setDestination(e.target.value))}
+                  placeholder="여행지나 숙소를 검색해보세요."
+                />
+              </div>
+
+              {/* 날짜 */}
+              <div className={styles.formItem}>
+                <i className="fa-solid fa-calendar-days"></i>
+                <DatePicker
+                  selected={checkin}
+                  onChange={(date) => dispatch(setCheckin(date))}
+                  placeholderText="체크인"
+                  dateFormat="yyyy/MM/dd"
+                  popperPlacement="bottom-start"
+                  showPopperArrow={false}
+                  locale={ko}
+                  minDate={new Date()}
+                  dayClassName={(date) => {
+                    if (!isFuture(date)) return '';
+                    if (isHoliday(date)) return 'holiday';
+                    if (isWeekend(date)) return 'weekend';
+                    return undefined;
+                  }}
+                />
+                <span style={{ margin: "0 6px" }}>-</span>
+                <DatePicker
+                  selected={checkout}
+                  onChange={(date) => dispatch(setCheckout(date))}
+                  placeholderText="체크아웃"
+                  dateFormat="yyyy/MM/dd"
+                  popperPlacement="bottom-start"
+                  showPopperArrow={false}
+                  locale={ko}
+                  minDate={checkin || new Date()} // checkin이 있으면 그 이후부터 가능
+                  dayClassName={(date) => {
+                    if (!isFuture(date)) return '';
+                    if (isHoliday(date)) return 'holiday';
+                    if (isWeekend(date)) return 'weekend';
+                    return undefined;
+                  }}
+                />
+              </div>
+
+              {/* 인원 수 */}
+              <div className={styles.formItem}>
+                <i className="fa-solid fa-user"></i>
+                <NumberInput
+                  value={guestsRaw}
+                  onChange={(valueString, valueNumber) => {
+                    const safeValue = valueNumber < 1 ? 1 : valueNumber;
+                    setGuestsRaw(valueString === '' ? '' : String(safeValue));
+                    dispatch(setGuests(safeValue));
+                  }}
+                  clampValueOnBlur={false}
+                  focusBorderColor="transparent"
+                  width="100%"
+                >
+                  <NumberInputField
+                    placeholder="인원 수"
+                    textAlign="left"
+                    pr="2.5rem"
+                  />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
+              </div>
+
+              {/* 검색 버튼 */}
+              <div className={styles.searchButtonWrapper}>
+                <button
+                  className={styles.searchBtn}
+                  onClick={() => {
+                    dispatch(setDestination(destination));
+                    dispatch(setDates({ startDate: checkin, endDate: checkout }));
+                    dispatch(setPeople(guests));
+                    navigate("/listPage");
+                  }}
+                >
+                  검색
+                </button>
+              </div>
             </div>
-            <div>
-              <label>체크아웃</label>
-              <DatePicker
-                selected={checkout}
-                onChange={(date) => dispatch(setCheckout(date))}
-                placeholderText="날짜 선택"
-                dateFormat="yyyy/MM/dd"
-                popperPlacement="bottom-start"
-                showPopperArrow={false}
-                locale={ko}
-                minDate={checkin || new Date()} // checkin이 있으면 그 이후부터 가능
-                dayClassName={(date) => {
-                  if (!isFuture(date)) return '';
-                  if (isHoliday(date)) return 'holiday';
-                  if (isWeekend(date)) return 'weekend';
-                  return undefined;
-                }}
-              />
-            </div>
           </div>
-
-          <div>
-            <label htmlFor="guests">인원 수</label>
-            <input
-              type="number"
-              id="guests"
-              value={guests}
-              onChange={(e) => dispatch(setGuests(Number(e.target.value)))}
-              min="1"
-            />
-          </div>
-
-          <Link to="/listPage">
+          {/* AI 컨설팅 */}
+          <section className={styles.consulting}>
+            <span className={styles.consultingText}>당신에게 딱 맞는 호텔 추천</span>
             <Button
-              colorScheme="red"
+              colorScheme="whiteAlpha"
               size="md"
-              mt={4}
-              w="100%"
+              width="100%"
+              fontWeight="bold"
+              borderRadius="full"
+              _hover={{ transform: "scale(1.05)" }}
+              transition="all 0.2s"
+              right="-25px"
               onClick={() => {
-                dispatch(setDestination(destination));
-                dispatch(setDates({ startDate: checkin, endDate: checkout }));
-                dispatch(setPeople(guests));
+                if (isAuthenticated) {
+                  navigate("/ai");
+                } else {
+                  toast({
+                    title: "로그인이 필요합니다.",
+                    description: "AI 컨설팅 기능은 로그인 후 이용 가능합니다.",
+                    status: "warning",
+                    duration: 3000,
+                    isClosable: true,
+                    position: "top"
+                  });
+                  navigate("/login");
+                }
               }}
             >
-              검색
+              AI 컨설팅 받기
             </Button>
-          </Link>
+          </section>
         </div>
       </section>
 
-      {/* AI 컨설팅 */}
-      <section className={styles.consulting}>
-        <h2>AI: 나에게 딱 맞는 여행지 컨설팅</h2>
-        <Button
-          colorScheme="red"
-          size="md"
-          width="10%"
-          fontWeight="bold"
-          borderRadius="full"
-          _hover={{ transform: "scale(1.05)" }}
-          transition="all 0.2s"
-          right="-25px"
-          onClick={() => {
-            if (isAuthenticated) {
-              navigate("/ai");
-            } else {
-              toast({
-                title: "로그인이 필요합니다.",
-                description: "AI 컨설팅 기능은 로그인 후 이용 가능합니다.",
-                status: "warning",
-                duration: 3000,
-                isClosable: true,
-                position: "top"
-              });
-              navigate("/login");
-            }
+      <div
+        className={styles.recommendSection}
+        style={{
+          margin: "30px 0 24px",
+          width: "100%",
+          padding: "0 4rem",
+        }}
+      >
+        <h3
+          className={styles.recommendTitle}
+          style={{
+            fontSize: "1.09rem",
+            fontWeight: "700",
+            letterSpacing: "-0.5px",
+            color: "#233044",
+            marginBottom: "13px",
+            paddingLeft: "2px",
+            lineHeight: "1.2",
           }}
         >
-          AI 컨설팅 받기
-        </Button>
-      </section>
+          추천 호텔{" "}
+          <span
+            style={{
+              fontSize: "0.92rem",
+              fontWeight: "600",
+              color: "#00b1b1",
+              marginLeft: "5px",
+            }}
+          >
+            (평점기준)
+          </span>
+        </h3>
 
-      {/* 서비스 카드 */}
-      <section className={styles.services}>
-        <div className={styles.serviceItem}>
-          <div className={styles.serviceImg1} style={{ backgroundImage: `url(${rc1})` }}></div>
-          <p>휴양</p>
+        <div
+          className={styles.recommendList}
+          style={{
+            display: "flex",
+            flexWrap: "nowrap",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            gap: "13px",
+            width: "100%",
+          }}
+        >
+          {recommendHotels.length === 0 ? (
+            <p
+              style={{
+                fontSize: "0.98rem",
+                color: "#888",
+                padding: "18px 0",
+                textAlign: "center",
+                width: "100%",
+              }}
+            >
+              추천 호텔 정보를 불러오는 중이거나 데이터가 없습니다.
+            </p>
+          ) : (
+            recommendHotels.slice(0, 5).map((hotel) => {
+              const images = getHotelImageList(hotel.hotelID, 5);
+              return (
+                <div
+                  className={styles.recommendCard}
+                  key={hotel.hotelID}
+                  style={{
+                    flex: "1 1 16.5%",
+                    maxWidth: "19%",
+                    minWidth: "180px",
+                    boxSizing: "border-box",
+                    background: "#fff",
+                    borderRadius: "12px",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                    textDecoration: "none",
+                    transition: "box-shadow 0.17s, transform 0.15s",
+                    display: "flex",
+                    flexDirection: "column",
+                    cursor: "pointer",
+                  }}
+                >
+                  {/* Swiper 영역 (이미지 슬라이드) */}
+                  <div
+                    className={styles.recommendImgBox}
+                    style={{ width: "100%" }}
+                  >
+                    <Swiper
+                      spaceBetween={1}
+                      slidesPerView={1}
+                      loop={true}
+                      navigation={true}
+                      modules={[Navigation]}
+                      style={{
+                        width: "100%",
+                        height: "140px",
+                        borderRadius: "10px",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {images.map((img, idx) => (
+                        <SwiperSlide key={idx}>
+                          <img
+                            src={img}
+                            alt={`${hotel.hotelName} 이미지${idx + 1}`}
+                            className={styles.recommendImg}
+                            style={{
+                              width: "100%",
+                              height: "140px",
+                              objectFit: "cover",
+                              borderRadius: "10px",
+                              transition: "transform 0.2s",
+                              marginBottom: "0",
+                              // 아래가 핵심! Swiper 이미지 클릭 시 Link 이동 방지
+                              cursor: "grab",
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </SwiperSlide>
+                      ))}
+                    </Swiper>
+                  </div>
+                  {/* 호텔 정보 영역 (여기만 Link 처리) */}
+                  <Link
+                    to={`/reservationPage/${hotel.hotelID}`}
+                    style={{
+                      color: "inherit",
+                      textDecoration: "none",
+                      flex: "1 1 auto",
+                      display: "flex",
+                      flexDirection: "column",
+                    }}
+                    className={styles.recommendInfo}
+                  >
+                    <div
+                      style={{
+                        padding: "7px 7px 8px 7px",
+                        flex: "1 1 auto",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "flex-start",
+                        margin: 0,
+                      }}
+                    >
+                      <h4
+                        style={{
+                          margin: "0 0 2px",
+                          fontSize: "0.98rem",
+                          fontWeight: 700,
+                          color: "#222",
+                        }}
+                      >
+                        {hotel.hotelName}
+                      </h4>
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: "0.87rem",
+                          color: "#444",
+                          lineHeight: "1.4",
+                        }}
+                      >
+                        <b style={{ color: "#00b1b1" }}>
+                          ⭐ {hotel.averageRating}
+                        </b>{" "}
+                        <span style={{ color: "#aaa" }}>
+                          ({hotel.reviewCount}명)
+                        </span>
+                        <br />
+                        <span style={{ color: "#888" }}>{hotel.address}</span>
+                      </p>
+                    </div>
+                  </Link>
+                </div>
+              );
+            })
+          )}
         </div>
-        <div className={styles.serviceItem}>
-          <div className={styles.serviceImg2} style={{ backgroundImage: `url(${rc2})` }}></div>
-          <p>액티비티</p>
-        </div>
-        <div className={styles.serviceItem}>
-          <div className={styles.serviceImg3} style={{ backgroundImage: `url(${rc3})` }}></div>
-          <p>쇼핑</p>
-        </div>
-      </section>
+      </div>
+
 
       {/* 광고 슬라이더 */}
       <section className={styles.adSlider}>
@@ -299,7 +553,7 @@ const FirstPage = () => {
           }}
           loop={true}
           autoplay={{
-            delay: 5000,
+            delay: 7000,
             disableOnInteraction: false
           }}
           slidesPerView={1}
@@ -320,28 +574,6 @@ const FirstPage = () => {
 
         <button className={`${styles.sliderBtn} ${styles.customPrev}`}>&lt;</button>
         <button className={`${styles.sliderBtn} ${styles.customNext}`}>&gt;</button>
-      </section>
-
-      {/* 추천 여행지 */}
-      <section className={styles.recommend}>
-        <h3>추천 관광지</h3>
-        <div className={styles.destinations}>
-          <div className={styles.destItem}>
-            <div className={styles.destImg1} style={{ backgroundImage: `url(${r1})` }}></div>
-            <h4>남산 서울타워</h4>
-            <p>용산구</p>
-          </div>
-          <div className={styles.destItem}>
-            <div className={styles.destImg2} style={{ backgroundImage: `url(${r2})` }}></div>
-            <h4>한옥마을</h4>
-            <p>북촌</p>
-          </div>
-          <div className={styles.destItem}>
-            <div className={styles.destImg3} style={{ backgroundImage: `url(${r3})` }}></div>
-            <h4>덕수궁</h4>
-            <p>중구</p>
-          </div>
-        </div>
       </section>
 
       {/* Footer */}

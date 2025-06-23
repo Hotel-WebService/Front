@@ -6,39 +6,40 @@
 
 /* Header */
 .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #ccc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #ccc;
 }
 
 .logo {
-    padding-left: 2rem;
-    padding-top: 0.5rem;
-    font-size: 1.5rem;
+  padding-left: 2rem;
+  padding-top: 0.5rem;
+  font-size: 1.5rem;
 }
 
 .logo a {
-    text-decoration: none;
-    color: #000000;
-    font-weight: bold;
+  text-decoration: none;
+  color: #000000;
+  font-weight: bold;
 }
 
 .signupLink {
-    font-size: 0.7rem;
+  font-size: 0.7rem;
 }
 
 .navLinks {
-    margin-top: 0.7rem;
+  margin-top: 0.7rem;
 }
 
 .navLinks a {
-    margin-right: 1.5rem;
-    text-decoration: none;
-    color: #333;
-    font-size: 15px;
+  margin-right: 1.5rem;
+  text-decoration: none;
+  color: #333;
+  font-size: 15px;
 }
+
 /* Header */
 
 /*DatePicker*/
@@ -88,8 +89,8 @@ body .react-datepicker__day.weekend {
 
 /* Footer */
 footer {
-    background: #f1f1f1;
-    padding: 2rem;
+  background: #f1f1f1;
+  padding: 2rem;
 }
 
 .footer-top {
@@ -105,19 +106,19 @@ footer {
 }
 
 .footer-section {
-    flex: 1;
+  flex: 1;
 }
 
 .footer-section ul {
-    list-style: none;
-    padding: 0;
+  list-style: none;
+  padding: 0;
 }
 
 .footer-section li {
-    margin-bottom: 0.5rem;
-    margin-top: 0.5rem;
-    color: #555;
-    white-space: nowrap;
+  margin-bottom: 0.5rem;
+  margin-top: 0.5rem;
+  color: #555;
+  white-space: nowrap;
 }
 
 .footer-section:first-child {
@@ -132,27 +133,27 @@ footer {
 }
 
 .footer-links {
-    display: flex;
-    gap: 3rem;
+  display: flex;
+  gap: 3rem;
 }
 
 .footer-links ul {
-    list-style: none;
+  list-style: none;
 }
 
 .footer-links li {
-    margin-bottom: 0.6rem;
-    font-size: 0.9rem;
-    color: #555;
+  margin-bottom: 0.6rem;
+  font-size: 0.9rem;
+  color: #555;
 }
 
 .footer-bottom {
-    text-align: center;
+  text-align: center;
 }
 
 .footer-logo {
   font-size: 1.5rem;
-    font-weight: bold;
+  font-weight: bold;
 }
 
 .social-wrapper {
@@ -168,34 +169,36 @@ footer {
   background-size: cover;
   background-repeat: no-repeat;
 }
+
 /* Footer */
 
 /* Swiper 버튼 커스터마이징 */
 .swiper-button-prev,
 .swiper-button-next {
-    position: absolute;
-    top: 50%;
-    background: rgba(255, 255, 255, 0.5);
-    border: none;
-    font-size: 2rem;
-    cursor: pointer;
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-    z-index: 10;
+  position: absolute;
+  top: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  z-index: 10;
 }
 
 .swiper-button-prev::after,
 .swiper-button-next::after {
-    font-size: 24px;
-    font-weight: bold;
-    color: #000000;
+  font-size: 24px;
+  font-weight: bold;
+  color: #000000;
 }
 
 .swiper-button-prev {
-    left: 10px;
+  left: 10px;
 }
 
 .swiper-button-next {
-    right: 10px;
+  right: 10px;
 }
+
 /* Swiper 버튼 커스터마이징 */

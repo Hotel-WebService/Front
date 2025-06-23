@@ -692,11 +692,7 @@ const ReservationPage = () => {
             {/* Header */}
 
             <div className={styles.searchBox}>
-                <input
-                    type="text"
-                    value={destination}
-                    onChange={(e) => dispatch(setDestination(e.target.value))}
-                />
+                
 
                 <DatePicker
                     selectsRange
